@@ -1,120 +1,370 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import GoldDivider from '../components/GoldDivider'
+import { useLang } from '../contexts/LangContext'
+import { CAT_FR } from '../i18n/index.js'
 
-const products = [
-  { id: 1,  name: 'Midnight Noir Blazer',      price: '£895',   category: 'Outerwear',   tag: 'New' },
-  { id: 2,  name: 'Signature Silk Shirt',       price: '£420',   category: 'Tops',        tag: 'Bestseller' },
-  { id: 3,  name: 'Imperial Wool Trousers',     price: '£580',   category: 'Bottoms',     tag: 'Limited' },
-  { id: 4,  name: 'Obsidian Leather Jacket',    price: '£1,290', category: 'Outerwear',   tag: 'Exclusive' },
-  { id: 5,  name: 'Cashmere Turtleneck',        price: '£650',   category: 'Tops',        tag: 'New' },
-  { id: 6,  name: 'Slim-Cut Formal Trousers',   price: '£460',   category: 'Bottoms',     tag: null },
-  { id: 7,  name: 'Overcoat in Midnight Navy',  price: '£1,100', category: 'Outerwear',   tag: 'New' },
-  { id: 8,  name: 'Structured Linen Shirt',     price: '£340',   category: 'Tops',        tag: null },
-  { id: 9,  name: 'Tailored Shorts',            price: '£280',   category: 'Bottoms',     tag: null },
-  { id: 10, name: 'Gold-Button Suit Jacket',    price: '£1,450', category: 'Outerwear',   tag: 'Limited' },
-  { id: 11, name: 'Premium Cotton Polo',        price: '£195',   category: 'Tops',        tag: null },
-  { id: 12, name: 'Heritage Chino',             price: '£320',   category: 'Bottoms',     tag: null },
+/* ─── Product catalogue ─────────────────────────────────────────────────── */
+export const products = [
+  // Les Sacs
+  {
+    id: 1,
+    nameFR: 'Sac Noir Éclat',
+    nameEN: 'Black Éclat Bag',
+    price:  '£495',
+    cat:    'Les Sacs',
+    tag:    { FR: 'Nouveau', EN: 'New' },
+    img:    'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80',
+    descFR: "Sac en cuir pleine fleur noir mat aux lignes architecturales. Doublure en satin, fermoir magnétique doré et bandoulière amovible. Un indispensable intemporel.",
+    descEN: "Matte black full-grain leather bag with architectural lines. Satin lining, gold magnetic clasp, and removable strap. A timeless essential.",
+    material: { FR: 'Cuir pleine fleur', EN: 'Full-grain leather' },
+    origin:   { FR: 'Fabriqué en Italie', EN: 'Made in Italy' },
+    care:     { FR: 'Entretien avec crème cuir', EN: 'Condition with leather cream' },
+  },
+  {
+    id: 2,
+    nameFR: 'Sac Bandoulière Bordeaux',
+    nameEN: 'Bordeaux Crossbody Bag',
+    price:  '£385',
+    cat:    'Les Sacs',
+    tag:    { FR: 'Bestseller', EN: 'Bestseller' },
+    img:    'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80',
+    descFR: "Sac bandoulière en cuir bordeaux aux reflets profonds. Chaîne dorée, poche zippée intérieure et compartiments multiples pour une organisation parfaite.",
+    descEN: "Bordeaux leather crossbody with deep undertones. Gold chain, interior zip pocket, and multiple compartments for effortless organisation.",
+    material: { FR: 'Cuir vélin bordeaux', EN: 'Bordeaux vellum leather' },
+    origin:   { FR: 'Fabriqué en Espagne', EN: 'Made in Spain' },
+    care:     { FR: 'Entretien avec crème cuir', EN: 'Condition with leather cream' },
+  },
+
+  // Montres
+  {
+    id: 3,
+    nameFR: 'Montre Or Rose Impérial',
+    nameEN: 'Imperial Rose Gold Watch',
+    price:  '£890',
+    cat:    'Montres',
+    tag:    { FR: 'Exclusif', EN: 'Exclusive' },
+    img:    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80',
+    descFR: "Montre en or rose avec cadran guilloché et bracelet en cuir havane. Mouvement à quartz de précision suisse. Étanche à 30 mètres.",
+    descEN: "Rose gold watch with guilloché dial and tan leather strap. Swiss precision quartz movement. Water-resistant to 30 metres.",
+    material: { FR: 'Boîtier en acier or rose, cuir havane', EN: 'Rose gold steel case, tan leather' },
+    origin:   { FR: 'Mouvement suisse', EN: 'Swiss movement' },
+    care:     { FR: 'Révision recommandée tous les 3 ans', EN: 'Service recommended every 3 years' },
+  },
+  {
+    id: 4,
+    nameFR: 'Montre Minimaliste Noire',
+    nameEN: 'Black Minimalist Watch',
+    price:  '£750',
+    cat:    'Montres',
+    tag:    null,
+    img:    'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?auto=format&fit=crop&w=600&q=80',
+    descFR: "Montre minimaliste à cadran noir mat avec index dorés. Bracelet en cuir noir gaufré. L'élégance dans sa forme la plus pure.",
+    descEN: "Minimalist watch with matte black dial and gold indices. Embossed black leather strap. Elegance in its purest form.",
+    material: { FR: 'Boîtier en acier, cuir gaufré', EN: 'Steel case, embossed leather' },
+    origin:   { FR: 'Mouvement japonais', EN: 'Japanese movement' },
+    care:     { FR: 'Éviter l\'eau et les chocs', EN: 'Avoid water and impact' },
+  },
+
+  // Lunettes
+  {
+    id: 5,
+    nameFR: 'Lunettes Aviateur Dorées',
+    nameEN: 'Gold Aviator Sunglasses',
+    price:  '£180',
+    cat:    'Lunettes',
+    tag:    { FR: 'Nouveau', EN: 'New' },
+    img:    'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80',
+    descFR: "Lunettes de soleil aviateur à monture dorée et verres dégradés fumés. Protection UV 400. Livrées avec étui en cuir et chiffon en microfibre.",
+    descEN: "Gold aviator sunglasses with gradient smoked lenses. UV 400 protection. Delivered with leather case and microfibre cloth.",
+    material: { FR: 'Monture métal doré, verres polarisés', EN: 'Gold metal frame, polarised lenses' },
+    origin:   { FR: 'Fabriqué en Italie', EN: 'Made in Italy' },
+    care:     { FR: 'Nettoyer avec le chiffon fourni', EN: 'Clean with the included cloth' },
+  },
+  {
+    id: 6,
+    nameFR: 'Lunettes Cat-Eye Noires',
+    nameEN: 'Black Cat-Eye Sunglasses',
+    price:  '£165',
+    cat:    'Lunettes',
+    tag:    { FR: 'Limité', EN: 'Limited' },
+    img:    'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=600&q=80',
+    descFR: "Lunettes cat-eye en acétate noir avec verres noirs intenses. Design iconique revisité avec une touche contemporaine dorée sur les charnières.",
+    descEN: "Black acetate cat-eye sunglasses with intense black lenses. Iconic design revisited with a contemporary gold touch on hinges.",
+    material: { FR: 'Acétate noir, charnières dorées', EN: 'Black acetate, gold hinges' },
+    origin:   { FR: 'Fabriqué en France', EN: 'Made in France' },
+    care:     { FR: 'Nettoyer avec le chiffon fourni', EN: 'Clean with the included cloth' },
+  },
+
+  // Châles
+  {
+    id: 7,
+    nameFR: 'Châle Cachemire Marine',
+    nameEN: 'Navy Cashmere Shawl',
+    price:  '£220',
+    cat:    'Châles',
+    tag:    null,
+    img:    'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?auto=format&fit=crop&w=600&q=80',
+    descFR: "Châle en cachemire 100% d'une douceur incomparable. Coloris bleu marine profond avec finitions effilochées à la main. Dimensions 200 × 70 cm.",
+    descEN: "100% cashmere shawl of incomparable softness. Deep navy blue with hand-frayed finishes. Dimensions 200 × 70 cm.",
+    material: { FR: 'Cachemire 100% grade A', EN: '100% Grade A cashmere' },
+    origin:   { FR: 'Fabriqué au Népal', EN: 'Made in Nepal' },
+    care:     { FR: 'Lavage à la main à l\'eau froide', EN: 'Hand-wash in cold water' },
+  },
+  {
+    id: 8,
+    nameFR: 'Châle Soie Ivoire',
+    nameEN: 'Ivory Silk Shawl',
+    price:  '£195',
+    cat:    'Châles',
+    tag:    { FR: 'Bestseller', EN: 'Bestseller' },
+    img:    'https://images.unsplash.com/photo-1599577286614-71f37b2e3f76?auto=format&fit=crop&w=600&q=80',
+    descFR: "Châle en soie de mûrier ivoire à reflets nacrés. Léger et fluide, il s'adapte à toutes les occasions avec une grâce naturelle.",
+    descEN: "Ivory mulberry silk shawl with pearlescent shimmer. Lightweight and fluid, it adapts to every occasion with effortless grace.",
+    material: { FR: 'Soie de mûrier 100%', EN: '100% mulberry silk' },
+    origin:   { FR: 'Fabriqué en Chine', EN: 'Made in China' },
+    care:     { FR: 'Nettoyage à sec recommandé', EN: 'Dry clean recommended' },
+  },
+
+  // Parfum femme
+  {
+    id: 9,
+    nameFR: 'Essence Noire EDP',
+    nameEN: 'Essence Noire EDP',
+    price:  '£145',
+    cat:    'Parfum femme',
+    tag:    { FR: 'Exclusif', EN: 'Exclusive' },
+    img:    'https://images.unsplash.com/photo-1541643600914-78b084683702?auto=format&fit=crop&w=600&q=80',
+    descFR: "Un sillage profond et envoûtant composé de notes de oud, de patchouli et de rose absolue. Un parfum de caractère pour la femme qui s'affirme.",
+    descEN: "A deep and captivating sillage of oud, patchouli, and rose absolute. A character fragrance for the woman who makes a statement.",
+    material: { FR: 'Eau de Parfum, 50 ml', EN: 'Eau de Parfum, 50 ml' },
+    origin:   { FR: 'Créé à Grasse, France', EN: 'Created in Grasse, France' },
+    care:     { FR: 'Conserver à l\'abri de la lumière', EN: 'Store away from light and heat' },
+  },
+  {
+    id: 10,
+    nameFR: 'Rose Impériale EDP',
+    nameEN: 'Rose Impériale EDP',
+    price:  '£165',
+    cat:    'Parfum femme',
+    tag:    { FR: 'Nouveau', EN: 'New' },
+    img:    'https://images.unsplash.com/photo-1588776814546-1ffbb172d3da?auto=format&fit=crop&w=600&q=80',
+    descFR: "Une ode florale à la rose de Turquie, rehaussée de bergamote dorée et de musc blanc. Féminité et raffinement en un seul flacon.",
+    descEN: "A floral ode to Turkish rose, enhanced with golden bergamot and white musk. Femininity and refinement in a single bottle.",
+    material: { FR: 'Eau de Parfum, 50 ml', EN: 'Eau de Parfum, 50 ml' },
+    origin:   { FR: 'Créé à Grasse, France', EN: 'Created in Grasse, France' },
+    care:     { FR: 'Conserver à l\'abri de la lumière', EN: 'Store away from light and heat' },
+  },
+
+  // Porte M & accessoires
+  {
+    id: 11,
+    nameFR: 'Porte-Monnaie Cuir Noir',
+    nameEN: 'Black Leather Wallet',
+    price:  '£85',
+    cat:    'Porte M & accessoires',
+    tag:    null,
+    img:    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80',
+    descFR: "Porte-monnaie compact en cuir de veau noir avec coutures dorées. Six emplacements cartes, un compartiment monnaie et une poche billet.",
+    descEN: "Compact black calf leather wallet with gold stitching. Six card slots, coin compartment, and a note pocket.",
+    material: { FR: 'Cuir de veau, coutures dorées', EN: 'Calf leather, gold stitching' },
+    origin:   { FR: 'Fabriqué en Italie', EN: 'Made in Italy' },
+    care:     { FR: 'Entretien avec crème cuir', EN: 'Condition with leather cream' },
+  },
+  {
+    id: 12,
+    nameFR: 'Porte-Cartes Doré',
+    nameEN: 'Gold Card Holder',
+    price:  '£65',
+    cat:    'Porte M & accessoires',
+    tag:    { FR: 'Nouveau', EN: 'New' },
+    img:    'https://images.unsplash.com/photo-1548171915-e1db7e4af8d3?auto=format&fit=crop&w=600&q=80',
+    descFR: "Porte-cartes slim en cuir noir avec passepoil doré. Quatre emplacements cartes, finitions à la main. L'élégance dans votre poche.",
+    descEN: "Slim black leather card holder with gold piping. Four card slots, hand-finished edges. Elegance in your pocket.",
+    material: { FR: 'Cuir vachette, bords peints or', EN: 'Cowhide leather, gold-painted edges' },
+    origin:   { FR: 'Fabriqué en France', EN: 'Made in France' },
+    care:     { FR: 'Entretien avec crème cuir', EN: 'Condition with leather cream' },
+  },
+
+  // Voiles en soie
+  {
+    id: 13,
+    nameFR: 'Voile Soie Dorée',
+    nameEN: 'Gold Silk Veil',
+    price:  '£125',
+    cat:    'Voiles en soie',
+    tag:    { FR: 'Limité', EN: 'Limited' },
+    img:    'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=600&q=80',
+    descFR: "Voile en soie naturelle aux reflets dorés. Ourlet roulé à la main, tissu fluide et léger idéal pour toutes occasions. Dimensions 180 × 90 cm.",
+    descEN: "Natural silk veil with golden shimmer. Hand-rolled hem, fluid and lightweight fabric ideal for any occasion. 180 × 90 cm.",
+    material: { FR: 'Soie naturelle 100%', EN: '100% natural silk' },
+    origin:   { FR: 'Tissé en Inde', EN: 'Woven in India' },
+    care:     { FR: 'Nettoyage à sec uniquement', EN: 'Dry clean only' },
+  },
+  {
+    id: 14,
+    nameFR: 'Voile Soie Nuit',
+    nameEN: 'Midnight Silk Veil',
+    price:  '£115',
+    cat:    'Voiles en soie',
+    tag:    null,
+    img:    'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=600&q=80',
+    descFR: "Voile en soie noir nuit, subtile et raffinée. La légèreté de la soie au service d'un style discret et élégant. Dimensions 180 × 90 cm.",
+    descEN: "Midnight black silk veil, subtle and refined. The lightness of silk in service of a discreet and elegant style. 180 × 90 cm.",
+    material: { FR: 'Soie naturelle 100%', EN: '100% natural silk' },
+    origin:   { FR: 'Tissé en Inde', EN: 'Woven in India' },
+    care:     { FR: 'Nettoyage à sec uniquement', EN: 'Dry clean only' },
+  },
 ]
 
-const categories = ['All', 'Outerwear', 'Tops', 'Bottoms']
-const sortOptions = ['Featured', 'Newest', 'Price: Low–High', 'Price: High–Low']
+const sortOptionsFR = ['Vedettes', 'Nouveautés', 'Prix croissant', 'Prix décroissant']
+const sortOptionsEN = ['Featured', 'Newest', 'Price: Low–High', 'Price: High–Low']
 
 export default function Shop() {
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [sort,           setSort]           = useState('Featured')
+  const { lang, t }       = useLang()
+  const s                 = t.shop
+  const [searchParams]    = useSearchParams()
+
+  // Map EN display category to FR internal category key
+  const enToFr = Object.fromEntries(
+    t.categories.map((enCat, i) => [enCat, CAT_FR[i]])
+  )
+
+  const urlCat  = searchParams.get('cat') || ''
+  const initCat = urlCat
+    ? (CAT_FR.includes(urlCat) ? urlCat : CAT_FR[0])
+    : CAT_FR[0]
+
+  const [activeCatFR, setActiveCatFR] = useState(initCat)
+  const [sort,        setSort]        = useState(0)
+
+  // When URL param changes, update filter
+  useEffect(() => {
+    if (urlCat && CAT_FR.includes(urlCat)) setActiveCatFR(urlCat)
+  }, [urlCat])
+
+  const displayCategories = t.categories  // FR or EN display labels
 
   const filtered = products.filter(p =>
-    activeCategory === 'All' || p.category === activeCategory
+    activeCatFR === CAT_FR[0] || p.cat === activeCatFR
   )
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sort === 2) return parseInt(a.price.replace(/\D/g, '')) - parseInt(b.price.replace(/\D/g, ''))
+    if (sort === 3) return parseInt(b.price.replace(/\D/g, '')) - parseInt(a.price.replace(/\D/g, ''))
+    return 0
+  })
+
+  const sortOptions = lang === 'FR' ? sortOptionsFR : sortOptionsEN
 
   return (
     <div className="bg-[#0a0a0a] min-h-screen pt-28">
 
       {/* ── Page Header ── */}
-      <section className="border-b border-[#1e1e1e] pb-16">
+      <section className="border-b border-[#1a1a1a] pb-14">
         <div className="container-luxury text-center">
-          <p className="label-gold mb-3">Our Collection</p>
-          <h1 className="heading-luxury text-5xl md:text-6xl text-white">The Shop</h1>
+          <p className="label-gold mb-3">{s.badge}</p>
+          <h1 className="heading-luxury text-5xl md:text-6xl text-white">{s.heading}</h1>
           <GoldDivider variant="ornament" />
-          <p className="text-[#5a5a5a] font-light max-w-md mx-auto">
-            Each piece is selected for its exceptional quality, craftsmanship, and enduring elegance.
-          </p>
+          <p className="text-[#5a5a5a] font-light max-w-md mx-auto text-sm">{s.sub}</p>
         </div>
       </section>
 
-      {/* ── Filters ── */}
-      <section className="border-b border-[#1e1e1e] sticky top-[72px] z-40 bg-[#0a0a0a]/95 backdrop-blur-sm">
-        <div className="container-luxury py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Category tabs */}
-          <div className="flex gap-1">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-5 py-2 text-[0.6rem] font-semibold tracking-[0.2em] uppercase rounded-full transition-all duration-300 ${
-                  activeCategory === cat
-                    ? 'bg-gold text-black'
-                    : 'text-[#5a5a5a] hover:text-gold border border-transparent hover:border-gold/30'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+      {/* ── Category + Sort bar ── */}
+      <section className="border-b border-[#1a1a1a] sticky top-[72px] z-40 bg-[#0a0a0a]/96 backdrop-blur-sm">
+        <div className="container-luxury py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+          {/* Category pills — scrollable on mobile */}
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0 max-w-full">
+            {displayCategories.map((label, i) => {
+              const frKey   = CAT_FR[i]
+              const isActive = activeCatFR === frKey
+              return (
+                <button
+                  key={frKey}
+                  onClick={() => setActiveCatFR(frKey)}
+                  className={`flex-shrink-0 px-4 py-1.5 text-[0.58rem] font-semibold tracking-[0.15em] uppercase rounded-full transition-all duration-300 ${
+                    isActive
+                      ? 'bg-gold text-black'
+                      : 'text-[#4a4a4a] hover:text-gold border border-transparent hover:border-gold/25'
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
           </div>
+
           {/* Sort */}
           <select
             value={sort}
-            onChange={e => setSort(e.target.value)}
-            className="input-luxury w-auto text-xs py-2 px-4 pr-8 appearance-none cursor-pointer rounded-full"
-            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23C9A84C' stroke-width='1.5'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center' }}
+            onChange={e => setSort(Number(e.target.value))}
+            className="input-luxury w-auto text-[0.7rem] py-2 px-4 pr-8 appearance-none cursor-pointer rounded-full flex-shrink-0"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23C9A84C' stroke-width='1.5'/%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 1rem center',
+            }}
           >
-            {sortOptions.map(o => <option key={o} value={o}>{o}</option>)}
+            {sortOptions.map((o, i) => (
+              <option key={o} value={i} style={{ background: '#111111' }}>{o}</option>
+            ))}
           </select>
         </div>
       </section>
 
-      {/* ── Products Grid ── */}
+      {/* ── Product Grid ── */}
       <section className="section-luxury">
         <div className="container-luxury">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filtered.map((product, i) => (
-              <Link
-                key={product.id}
-                to={`/product/${product.id}`}
-                className={`luxury-card group animate-fade-up delay-${(i % 6) + 1}00`}
-              >
-                <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
-                  <div
-                    className="absolute inset-0 transition-transform duration-700 group-hover:scale-105"
-                    style={{
-                      background: `linear-gradient(${145 + i * 8}deg, #1${i % 3 === 0 ? '8' : '6'}181${i % 2 === 0 ? '8' : '6'} 0%, #2a2a2a 100%)`,
-                    }}
-                  />
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-[rgba(201,168,76,0.06)] to-transparent" />
-                  {product.tag && (
-                    <div className="absolute top-4 left-4">
-                      <span className="label-gold bg-[#0a0a0a]/80 px-3 py-1 rounded-full text-[0.5rem] border border-gold/30">
-                        {product.tag}
-                      </span>
+          {sorted.length === 0 ? (
+            <div className="text-center py-24 text-[#3a3a3a]">
+              <p className="font-serif text-xl">{lang === 'FR' ? 'Aucun produit trouvé' : 'No products found'}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {sorted.map((product, i) => {
+                const name = lang === 'FR' ? product.nameFR : product.nameEN
+                const tag  = product.tag ? product.tag[lang] : null
+                const catLabel = displayCategories[CAT_FR.indexOf(product.cat)] || product.cat
+                return (
+                  <Link
+                    key={product.id}
+                    to={`/product/${product.id}`}
+                    className={`luxury-card group animate-fade-up delay-${(i % 6 + 1) * 100}`}
+                  >
+                    <div className="relative overflow-hidden bg-[#161616]" style={{ aspectRatio: '3/4' }}>
+                      <img
+                        src={product.img}
+                        alt={name}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        onError={e => { e.currentTarget.style.display = 'none' }}
+                      />
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-[rgba(201,168,76,0.06)] to-transparent" />
+                      {tag && (
+                        <div className="absolute top-4 left-4">
+                          <span className="label-gold bg-[#0a0a0a]/85 px-3 py-1 rounded-full text-[0.5rem] border border-gold/30">
+                            {tag}
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 flex items-end p-4 opacity-0 group-hover:opacity-100 transition-all duration-400 translate-y-2 group-hover:translate-y-0">
+                        <span className="btn-gold w-full py-2 text-[0.56rem] text-center cursor-pointer">
+                          <span>{s.viewItem}</span>
+                        </span>
+                      </div>
                     </div>
-                  )}
-                  <div className="absolute inset-0 flex items-end p-4 opacity-0 group-hover:opacity-100 transition-all duration-400 translate-y-2 group-hover:translate-y-0">
-                    <button className="btn-gold w-full py-2 text-[0.58rem]">
-                      <span>Add to Cart</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <p className="text-[#3a3a3a] text-[0.55rem] tracking-widest uppercase mb-1">{product.category}</p>
-                  <h3 className="font-serif text-sm text-white group-hover:text-gold transition-colors duration-300 mb-1.5">
-                    {product.name}
-                  </h3>
-                  <p className="text-gold font-semibold text-sm">{product.price}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+                    <div className="p-4">
+                      <p className="text-[#3a3a3a] text-[0.52rem] tracking-widest uppercase mb-1">{catLabel}</p>
+                      <h3 className="font-serif text-sm text-white group-hover:text-gold transition-colors duration-300 mb-1.5 leading-snug">
+                        {name}
+                      </h3>
+                      <p className="text-gold font-semibold text-sm">{product.price}</p>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
     </div>

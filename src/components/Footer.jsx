@@ -1,51 +1,32 @@
 import { Link } from 'react-router-dom'
 import GoldDivider from './GoldDivider'
-
-const footerLinks = {
-  Shop: [
-    { label: 'New Arrivals',     path: '/shop?filter=new' },
-    { label: 'Collections',      path: '/shop?filter=collections' },
-    { label: 'Accessories',      path: '/shop?filter=accessories' },
-    { label: 'Sale',             path: '/shop?filter=sale' },
-  ],
-  Company: [
-    { label: 'Our Story',        path: '/#story' },
-    { label: 'Sustainability',   path: '/#sustainability' },
-    { label: 'Careers',          path: '/#careers' },
-    { label: 'Press',            path: '/#press' },
-  ],
-  Support: [
-    { label: 'Contact Us',       path: '/contact' },
-    { label: 'Collaboration',    path: '/collaboration' },
-    { label: 'Size Guide',       path: '/#size-guide' },
-    { label: 'Returns & Refunds',path: '/#returns' },
-  ],
-}
+import { useLang } from '../contexts/LangContext'
 
 export default function Footer() {
+  const { t, lang } = useLang()
+  const f = t.footer
+  const year = new Date().getFullYear()
+
   return (
-    <footer className="bg-[#0a0a0a] border-t border-[#1e1e1e]">
+    <footer className="bg-[#0a0a0a] border-t border-[#1a1a1a]">
+
       {/* ── Newsletter Strip ── */}
-      <div className="border-b border-[#1e1e1e]">
+      <div className="border-b border-[#1a1a1a]">
         <div className="container-luxury py-14">
           <div className="flex flex-col md:flex-row md:items-center gap-8 justify-between">
             <div>
-              <p className="label-gold mb-2">Exclusive Access</p>
-              <h3 className="font-serif text-2xl font-semibold text-white">
-                Join the Inner Circle
-              </h3>
-              <p className="text-[#6a6a6a] text-sm mt-1 font-light">
-                First access to new collections, private sales, and editorial stories.
-              </p>
+              <p className="label-gold mb-2">{f.newsletterBadge}</p>
+              <h3 className="font-serif text-2xl font-semibold text-white">{f.newsletterHeading}</h3>
+              <p className="text-[#5a5a5a] text-sm mt-1 font-light">{f.newsletterSub}</p>
             </div>
             <form className="flex gap-0 flex-1 max-w-md" onSubmit={e => e.preventDefault()}>
               <input
                 type="email"
-                placeholder="Your email address"
+                placeholder={lang === 'FR' ? 'Votre adresse email' : 'Your email address'}
                 className="input-luxury rounded-none rounded-l-full flex-1 text-sm border-r-0"
               />
-              <button type="submit" className="btn-gold-solid rounded-none rounded-r-full px-6 text-[0.6rem]">
-                Subscribe
+              <button type="submit" className="btn-gold-solid rounded-none rounded-r-full px-6 text-[0.58rem] whitespace-nowrap">
+                {f.newsletterCta}
               </button>
             </form>
           </div>
@@ -54,23 +35,23 @@ export default function Footer() {
 
       {/* ── Main Footer ── */}
       <div className="container-luxury py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
 
           {/* Brand Column */}
-          <div className="lg:col-span-2">
-            <Link to="/" className="group inline-flex flex-col mb-6">
+          <div className="lg:col-span-1">
+            <Link to="/" className="inline-flex flex-col mb-6">
               <span className="font-serif text-3xl font-bold tracking-wider text-white">JB</span>
-              <span className="label-gold" style={{ fontSize: '0.55rem', letterSpacing: '0.35em' }}>CLOTHING</span>
+              <span className="label-gold" style={{ fontSize: '0.52rem', letterSpacing: '0.38em' }}>CLOTHING</span>
             </Link>
-            <p className="text-[#5a5a5a] text-sm leading-relaxed font-light max-w-xs">
-              Curated luxury fashion for those who appreciate the art of dressing well. Each piece is selected with an uncompromising eye for quality and refinement.
+            <p className="text-[#4a4a4a] text-sm leading-relaxed font-light max-w-xs">
+              {f.tagline}
             </p>
-            <div className="flex gap-4 mt-8">
-              {['instagram', 'twitter', 'pinterest', 'tiktok'].map(platform => (
+            <div className="flex gap-3 mt-8">
+              {['instagram', 'pinterest', 'tiktok'].map(platform => (
                 <a
                   key={platform}
                   href="#"
-                  className="w-9 h-9 border border-[#2a2a2a] rounded-full flex items-center justify-center text-[#5a5a5a] hover:border-gold hover:text-gold transition-all duration-300 hover:scale-110"
+                  className="w-9 h-9 border border-[#2a2a2a] rounded-full flex items-center justify-center text-[#4a4a4a] hover:border-gold hover:text-gold transition-all duration-300 hover:scale-110"
                   aria-label={platform}
                 >
                   <SocialIcon name={platform} />
@@ -79,39 +60,66 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Link Columns */}
-          {Object.entries(footerLinks).map(([heading, links]) => (
-            <div key={heading}>
-              <h4 className="label-gold mb-5">{heading}</h4>
-              <ul className="space-y-3">
-                {links.map(({ label, path }) => (
-                  <li key={label}>
-                    <Link
-                      to={path}
-                      className="text-[#5a5a5a] text-sm hover:text-gold transition-colors duration-300 font-light"
-                    >
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Shop Column */}
+          <div>
+            <h4 className="label-gold mb-5">{f.colBoutique}</h4>
+            <ul className="space-y-3">
+              <li><Link to="/shop" className="text-[#4a4a4a] text-sm hover:text-gold transition-colors duration-300 font-light">{f.newArrivals}</Link></li>
+              <li><Link to="/shop" className="text-[#4a4a4a] text-sm hover:text-gold transition-colors duration-300 font-light">{f.collections}</Link></li>
+              <li><Link to="/shop" className="text-[#4a4a4a] text-sm hover:text-gold transition-colors duration-300 font-light">{f.allProducts}</Link></li>
+              <li><Link to="/shop" className="text-[#4a4a4a] text-sm hover:text-gold transition-colors duration-300 font-light">{f.sale}</Link></li>
+            </ul>
+          </div>
+
+          {/* Maison Column — only "Notre Histoire" remains */}
+          <div>
+            <h4 className="label-gold mb-5">{f.colMaison}</h4>
+            <ul className="space-y-3">
+              <li>
+                <Link
+                  to="/#story"
+                  onClick={e => {
+                    e.preventDefault()
+                    const el = document.getElementById('story')
+                    if (el) el.scrollIntoView({ behavior: 'smooth' })
+                    else window.location.href = '/'
+                  }}
+                  className="text-[#4a4a4a] text-sm hover:text-gold transition-colors duration-300 font-light"
+                >
+                  {f.story}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Service Column — Size Guide removed */}
+          <div>
+            <h4 className="label-gold mb-5">{f.colService}</h4>
+            <ul className="space-y-3">
+              <li><Link to="/contact"      className="text-[#4a4a4a] text-sm hover:text-gold transition-colors duration-300 font-light">{f.contactUs}</Link></li>
+              <li><Link to="/collaboration" className="text-[#4a4a4a] text-sm hover:text-gold transition-colors duration-300 font-light">{f.collab}</Link></li>
+              <li><Link to="/contact"      className="text-[#4a4a4a] text-sm hover:text-gold transition-colors duration-300 font-light">{f.returns}</Link></li>
+            </ul>
+          </div>
         </div>
       </div>
 
       <GoldDivider />
 
-      {/* ── Bottom ── */}
+      {/* ── Bottom Bar ── */}
       <div className="container-luxury py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-[#3a3a3a] text-xs tracking-widest uppercase">
-          © {new Date().getFullYear()} JB Clothing. All rights reserved.
+        <p className="text-[#2a2a2a] text-xs tracking-widest uppercase">
+          {f.rights.replace('{year}', year)}
         </p>
         <div className="flex gap-6">
-          {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map(t => (
-            <a key={t} href="#" className="text-[#3a3a3a] text-xs tracking-wide hover:text-gold transition-colors duration-300">
-              {t}
-            </a>
+          {[
+            { label: f.privacy,  href: '/contact' },
+            { label: f.terms,    href: '/contact' },
+            { label: f.cookies,  href: '/contact' },
+          ].map(({ label, href }) => (
+            <Link key={label} to={href} className="text-[#2a2a2a] text-xs tracking-wide hover:text-gold transition-colors duration-300">
+              {label}
+            </Link>
           ))}
         </div>
       </div>
@@ -126,11 +134,6 @@ function SocialIcon({ name }) {
         <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
         <circle cx="12" cy="12" r="4"/>
         <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/>
-      </svg>
-    ),
-    twitter: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
       </svg>
     ),
     pinterest: (
