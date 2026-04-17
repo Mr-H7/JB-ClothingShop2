@@ -117,7 +117,11 @@ export default function Collaboration() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', type: '', message: '' })
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
-  const handleSubmit = e => { e.preventDefault(); setSubmitted(true) }
+  const handleSubmit = e => {
+    e.preventDefault()
+    setSubmitted(true)
+    setForm({ name: '', email: '', phone: '', type: '', message: '' })
+  }
 
   return (
     <div className="bg-[#0a0a0a] min-h-screen">

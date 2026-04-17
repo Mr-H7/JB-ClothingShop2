@@ -20,7 +20,7 @@ const featured = [
     price:  '£890',
     tag:    { FR: 'Exclusif', EN: 'Exclusive' },
     cat:    { FR: 'Montres', EN: 'Watches' },
-    img:    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80',
+    img:    'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 5,
@@ -29,7 +29,7 @@ const featured = [
     price:  '£180',
     tag:    { FR: 'Nouveau', EN: 'New' },
     cat:    { FR: 'Lunettes', EN: 'Sunglasses' },
-    img:    'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80',
+    img:    'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 9,
@@ -60,7 +60,7 @@ export default function Home() {
         {/* Background image */}
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1920&q=80"
+            src="https://images.unsplash.com/photo-1547949003-9792a18a2601?auto=format&fit=crop&w=1920&q=80"
             alt=""
             className="w-full h-full object-cover opacity-18"
             onError={e => { e.currentTarget.style.display = 'none' }}
@@ -204,7 +204,7 @@ export default function Home() {
               style={{ minHeight: '480px' }}
             >
               <img
-                src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=80"
+                src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80"
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60"
                 onError={e => { e.currentTarget.style.opacity = '0' }}
@@ -228,7 +228,7 @@ export default function Home() {
                 style={{ minHeight: '224px' }}
               >
                 <img
-                  src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=700&q=80"
+                  src="https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?auto=format&fit=crop&w=700&q=80"
                   alt=""
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-50"
                   onError={e => { e.currentTarget.style.opacity = '0' }}
@@ -294,7 +294,7 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-4">
               <div className="luxury-card overflow-hidden" style={{ aspectRatio: '2/3' }}>
                 <img
-                  src="https://images.unsplash.com/photo-1601924994987-69e26d50dc26?auto=format&fit=crop&w=400&q=80"
+                  src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=400&q=80"
                   alt=""
                   className="w-full h-full object-cover opacity-70"
                   onError={e => { e.currentTarget.style.opacity = '0' }}

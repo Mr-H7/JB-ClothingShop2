@@ -8,11 +8,16 @@ export default function Contact() {
 
   const [submitted,      setSubmitted]      = useState(false)
   const [newsletterDone, setNewsletterDone] = useState(false)
+  const [nlEmail,        setNlEmail]        = useState('')
   const [openFaq,        setOpenFaq]        = useState(null)
   const [form, setForm] = useState({ email: '', phone: '', message: '' })
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
-  const handleSubmit = e => { e.preventDefault(); setSubmitted(true) }
+  const handleSubmit = e => {
+    e.preventDefault()
+    setSubmitted(true)
+    setForm({ email: '', phone: '', message: '' })
+  }
 
   const contactDetails = [
     {
@@ -135,10 +140,12 @@ export default function Contact() {
             ) : (
               <form
                 className="flex gap-0 flex-1 max-w-md"
-                onSubmit={e => { e.preventDefault(); setNewsletterDone(true) }}
+                onSubmit={e => { e.preventDefault(); setNewsletterDone(true); setNlEmail('') }}
               >
                 <input
                   type="email" required
+                  value={nlEmail}
+                  onChange={e => setNlEmail(e.target.value)}
                   placeholder={lang === 'FR' ? 'Votre adresse email' : 'Your email address'}
                   className="input-luxury rounded-none rounded-l-full flex-1 border-r-0 text-sm"
                 />

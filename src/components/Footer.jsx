@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import GoldDivider from './GoldDivider'
 import { useLang } from '../contexts/LangContext'
@@ -6,6 +7,8 @@ export default function Footer() {
   const { t, lang } = useLang()
   const f = t.footer
   const year = new Date().getFullYear()
+  const [nlEmail, setNlEmail] = useState('')
+  const [nlDone,  setNlDone]  = useState(false)
 
   return (
     <footer className="bg-[#0a0a0a] border-t border-[#1a1a1a]">
@@ -19,16 +22,30 @@ export default function Footer() {
               <h3 className="font-serif text-2xl font-semibold text-white">{f.newsletterHeading}</h3>
               <p className="text-[#5a5a5a] text-sm mt-1 font-light">{f.newsletterSub}</p>
             </div>
-            <form className="flex gap-0 flex-1 max-w-md" onSubmit={e => e.preventDefault()}>
-              <input
-                type="email"
-                placeholder={lang === 'FR' ? 'Votre adresse email' : 'Your email address'}
-                className="input-luxury rounded-none rounded-l-full flex-1 text-sm border-r-0"
-              />
-              <button type="submit" className="btn-gold-solid rounded-none rounded-r-full px-6 text-[0.58rem] whitespace-nowrap">
-                {f.newsletterCta}
-              </button>
-            </form>
+            {nlDone ? (
+              <div className="flex items-center gap-3 text-gold text-sm font-semibold">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                {lang === 'FR' ? 'Merci pour votre inscription.' : 'Thank you for subscribing.'}
+              </div>
+            ) : (
+              <form
+                className="flex gap-0 flex-1 max-w-md"
+                onSubmit={e => { e.preventDefault(); setNlDone(true); setNlEmail('') }}
+              >
+                <input
+                  type="email" required
+                  value={nlEmail}
+                  onChange={e => setNlEmail(e.target.value)}
+                  placeholder={lang === 'FR' ? 'Votre adresse email' : 'Your email address'}
+                  className="input-luxury rounded-none rounded-l-full flex-1 text-sm border-r-0"
+                />
+                <button type="submit" className="btn-gold-solid rounded-none rounded-r-full px-6 text-[0.58rem] whitespace-nowrap">
+                  {f.newsletterCta}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>
