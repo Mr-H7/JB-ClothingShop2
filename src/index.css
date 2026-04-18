@@ -1,0 +1,327 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Reset ──────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #0a0a0a;
+    color: #f5f5f5;
+    font-family: 'Inter', Helvetica, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0a0a0a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #C9A84C;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #D4AF37;
+  }
+
+  ::selection {
+    background: rgba(201, 168, 76, 0.3);
+    color: #E8D5A3;
+  }
+}
+
+/* ─── Design System Components ───────────────────────────────────────────── */
+@layer components {
+
+  /* ── Typography ── */
+  .heading-luxury {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+
+  .heading-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+  }
+
+  .label-gold {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #C9A84C;
+  }
+
+  /* ── Gold shimmer text ── */
+  .text-gold-shimmer {
+    background: linear-gradient(90deg, #B8960C 0%, #E8D5A3 25%, #D4AF37 50%, #E8D5A3 75%, #B8960C 100%);
+    background-size: 400% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
+  }
+
+  /* ── Gold divider ── */
+  .gold-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #C9A84C 30%, #E8D5A3 50%, #C9A84C 70%, transparent 100%);
+  }
+
+  .gold-divider-short {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #C9A84C, transparent);
+    margin: 0 auto;
+  }
+
+  .gold-divider-left {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, #C9A84C, transparent);
+  }
+
+  /* ── Premium Buttons ── */
+  .btn-gold {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2.5rem;
+    background: transparent;
+    color: #C9A84C;
+    border: 1px solid #C9A84C;
+    border-radius: 9999px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .btn-gold::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #C9A84C 0%, #E8D5A3 50%, #C9A84C 100%);
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .btn-gold:hover::before {
+    opacity: 1;
+  }
+
+  .btn-gold:hover {
+    color: #0a0a0a;
+    border-color: #C9A84C;
+    box-shadow: 0 0 30px rgba(201, 168, 76, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-gold span {
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn-gold-solid {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2.5rem;
+    background: linear-gradient(135deg, #C9A84C 0%, #E8D5A3 50%, #C9A84C 100%);
+    color: #0a0a0a;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn-gold-solid:hover {
+    box-shadow: 0 0 40px rgba(201, 168, 76, 0.5), 0 8px 30px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+  }
+
+  /* ── Luxury Cards ── */
+  .luxury-card {
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 2px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .luxury-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid transparent;
+    background: linear-gradient(135deg, rgba(201,168,76,0.15) 0%, transparent 50%, rgba(201,168,76,0.05) 100%) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .luxury-card:hover::before {
+    opacity: 1;
+  }
+
+  .luxury-card:hover {
+    border-color: rgba(201, 168, 76, 0.4);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(201, 168, 76, 0.1);
+    transform: translateY(-4px);
+  }
+
+  /* ── Luxury inputs ── */
+  .input-luxury {
+    width: 100%;
+    background: #111111;
+    border: 1px solid #2a2a2a;
+    border-radius: 2px;
+    padding: 0.875rem 1.25rem;
+    color: #f5f5f5;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    outline: none;
+  }
+
+  .input-luxury::placeholder {
+    color: #4a4a4a;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  .input-luxury:focus {
+    border-color: #C9A84C;
+    box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.2), 0 0 20px rgba(201, 168, 76, 0.08);
+    background: #161616;
+  }
+
+  .input-luxury:hover {
+    border-color: #3a3a3a;
+  }
+
+  /* ── Section wrappers ── */
+  .section-luxury {
+    padding: 7rem 0;
+    position: relative;
+  }
+
+  .container-luxury {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ── Gold accent bar ── */
+  .gold-accent-bar {
+    width: 3px;
+    background: linear-gradient(180deg, #C9A84C 0%, #E8D5A3 50%, #C9A84C 100%);
+    border-radius: 2px;
+  }
+
+  /* ── Texture overlay ── */
+  .texture-overlay {
+    position: relative;
+  }
+  .texture-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.008) 2px,
+        rgba(255,255,255,0.008) 4px
+      );
+    pointer-events: none;
+  }
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400% 0; }
+  100% { background-position: 400% 0; }
+}
+
+@keyframes fadeUp {
+  0%   { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes floatWhatsapp {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+/* ─── Utilities ──────────────────────────────────────────────────────────── */
+@layer utilities {
+  .animate-fade-up  { animation: fadeUp 0.7s ease-out both; }
+  .animate-fade-in  { animation: fadeIn 0.9s ease-out both; }
+  .animate-shimmer  { animation: shimmer 3s linear infinite; }
+  .animate-float    { animation: floatWhatsapp 3s ease-in-out infinite; }
+
+  .delay-100 { animation-delay: 0.1s; }
+  .delay-200 { animation-delay: 0.2s; }
+  .delay-300 { animation-delay: 0.3s; }
+  .delay-400 { animation-delay: 0.4s; }
+  .delay-500 { animation-delay: 0.5s; }
+  .delay-600 { animation-delay: 0.6s; }
+
+  .text-balance { text-wrap: balance; }
+
+  /* Gradient gold text */
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #C9A84C 0%, #E8D5A3 50%, #C9A84C 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
