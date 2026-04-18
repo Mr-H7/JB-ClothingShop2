@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import GoldDivider from '../components/GoldDivider'
 import { useLang } from '../contexts/LangContext'
+import { useCart } from '../contexts/CartContext'
 import { products } from './Shop'
 import { CAT_FR } from '../i18n/index.js'
 
@@ -30,9 +31,22 @@ export default function Product() {
   const [selected, setSelected] = useState(null)
   const [added,    setAdded]    = useState(false)
   const [qty,      setQty]      = useState(1)
+  const addToCart = useCart(s => s.add)
 
   const handleAdd = () => {
     if (opts && !selected) return
+    const priceNumber = parseInt(String(product.price).replace(/\D/g, ''), 10) * 100
+    addToCart(
+      {
+        id: product.slug || String(product.id),
+        nameFR: product.nameFR,
+        nameEN: product.nameEN,
+        price: priceNumber,
+        imgUrl: product.img,
+      },
+      opts ? 1 : qty,
+      selected || ''
+    )
     setAdded(true)
     setTimeout(() => setAdded(false), 2200)
   }

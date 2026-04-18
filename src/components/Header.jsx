@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useLang } from '../contexts/LangContext'
+import { useCart } from '../contexts/CartContext'
 
 export default function Header() {
   const [scrolled,  setScrolled]  = useState(false)
   const [menuOpen,  setMenuOpen]  = useState(false)
-  const [cartCount]               = useState(2)
+  const cartCount                 = useCart(s => s.items.reduce((n, it) => n + it.quantity, 0))
   const { lang, setLang, t }      = useLang()
   const location  = useLocation()
   const navigate  = useNavigate()

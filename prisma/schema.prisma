@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("USER")
+  createdAt    DateTime @default(now())
+
+  profile   CustomerProfile?
+  addresses Address[]
+  carts     Cart[]
+  orders    Order[]
+}
+
+model CustomerProfile {
+  id        String @id @default(cuid())
+  userId    String @unique
+  firstName String @default("")
+  lastName  String @default("")
+  phone     String @default("")
+  language  String @default("FR")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  userId    String
+  label     String  @default("Home")
+  line1     String  @default("")
+  line2     String  @default("")
+  city      String  @default("")
+  postcode  String  @default("")
+  country   String  @default("GB")
+  isDefault Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id        String @id @default(cuid())
+  slugFR    String @unique
+  slugEN    String @unique
+  nameFR    String
+  nameEN    String
+  sortOrder Int    @default(0)
+
+  products Product[]
+}
+
+model Product {
+  id         String @id @default(cuid())
+  slug       String @unique
+  nameFR     String
+  nameEN     String
+  descFR     String @default("")
+  descEN     String @default("")
+  price      Int
+  categoryId String
+  materialFR String @default("")
+  materialEN String @default("")
+  originFR   String @default("")
+  originEN   String @default("")
+  careFR     String @default("")
+  careEN     String @default("")
+  tagFR      String @default("")
+  tagEN      String @default("")
+  imgUrl     String @default("")
+  status     String @default("ACTIVE")
+
+  category   Category    @relation(fields: [categoryId], references: [id])
+  inventory  Inventory?
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+}
+
+model Inventory {
+  id        String @id @default(cuid())
+  productId String @unique
+  stock     Int    @default(999)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String?
+  sessionId String?
+  updatedAt DateTime @updatedAt
+
+  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int    @default(1)
+  variant   String @default("")
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  userId          String?
+  total           Int
+  status          String   @default("PENDING")
+  paymentMethod   String   @default("COD")
+  shippingAddress String
+  createdAt       DateTime @default(now())
+
+  user  User?       @relation(fields: [userId], references: [id])
+  items OrderItem[]
+}
+
+model OrderItem {
+  id            String @id @default(cuid())
+  orderId       String
+  productId     String
+  nameSnapshot  String
+  priceSnapshot Int
+  quantity      Int    @default(1)
+  variant       String @default("")
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model NewsletterLead {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  language  String   @default("FR")
+  createdAt DateTime @default(now())
+}
+
+model ContactSubmission {
+  id        String    @id @default(cuid())
+  email     String
+  phone     String    @default("")
+  message   String
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+}
+
+model CollaborationSubmission {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  phone     String    @default("")
+  type      String
+  message   String
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+}

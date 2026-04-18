@@ -9,6 +9,7 @@ export const products = [
   // Les Sacs
   {
     id: 1,
+    slug: 'sac-noir-eclat',
     nameFR: 'Sac Noir Éclat',
     nameEN: 'Black Éclat Bag',
     price:  '£495',
@@ -23,6 +24,7 @@ export const products = [
   },
   {
     id: 2,
+    slug: 'sac-bandouliere-bordeaux',
     nameFR: 'Sac Bandoulière Bordeaux',
     nameEN: 'Bordeaux Crossbody Bag',
     price:  '£385',
@@ -39,6 +41,7 @@ export const products = [
   // Montres
   {
     id: 3,
+    slug: 'montre-or-rose-imperial',
     nameFR: 'Montre Or Rose Impérial',
     nameEN: 'Imperial Rose Gold Watch',
     price:  '£890',
@@ -53,6 +56,7 @@ export const products = [
   },
   {
     id: 4,
+    slug: 'montre-minimaliste-noire',
     nameFR: 'Montre Minimaliste Noire',
     nameEN: 'Black Minimalist Watch',
     price:  '£750',
@@ -69,6 +73,7 @@ export const products = [
   // Lunettes
   {
     id: 5,
+    slug: 'lunettes-aviateur-dorees',
     nameFR: 'Lunettes Aviateur Dorées',
     nameEN: 'Gold Aviator Sunglasses',
     price:  '£180',
@@ -83,6 +88,7 @@ export const products = [
   },
   {
     id: 6,
+    slug: 'lunettes-cat-eye-noires',
     nameFR: 'Lunettes Cat-Eye Noires',
     nameEN: 'Black Cat-Eye Sunglasses',
     price:  '£165',
@@ -99,6 +105,7 @@ export const products = [
   // Châles
   {
     id: 7,
+    slug: 'chale-cachemire-marine',
     nameFR: 'Châle Cachemire Marine',
     nameEN: 'Navy Cashmere Shawl',
     price:  '£220',
@@ -113,6 +120,7 @@ export const products = [
   },
   {
     id: 8,
+    slug: 'chale-soie-ivoire',
     nameFR: 'Châle Soie Ivoire',
     nameEN: 'Ivory Silk Shawl',
     price:  '£195',
@@ -129,6 +137,7 @@ export const products = [
   // Parfum femme
   {
     id: 9,
+    slug: 'essence-noire-edp',
     nameFR: 'Essence Noire EDP',
     nameEN: 'Essence Noire EDP',
     price:  '£145',
@@ -143,6 +152,7 @@ export const products = [
   },
   {
     id: 10,
+    slug: 'rose-imperiale-edp',
     nameFR: 'Rose Impériale EDP',
     nameEN: 'Rose Impériale EDP',
     price:  '£165',
@@ -159,6 +169,7 @@ export const products = [
   // Porte M & accessoires
   {
     id: 11,
+    slug: 'porte-monnaie-cuir-noir',
     nameFR: 'Porte-Monnaie Cuir Noir',
     nameEN: 'Black Leather Wallet',
     price:  '£85',
@@ -173,6 +184,7 @@ export const products = [
   },
   {
     id: 12,
+    slug: 'porte-cartes-dore',
     nameFR: 'Porte-Cartes Doré',
     nameEN: 'Gold Card Holder',
     price:  '£65',
@@ -189,6 +201,7 @@ export const products = [
   // Voiles en soie
   {
     id: 13,
+    slug: 'voile-soie-doree',
     nameFR: 'Voile Soie Dorée',
     nameEN: 'Gold Silk Veil',
     price:  '£125',
@@ -203,6 +216,7 @@ export const products = [
   },
   {
     id: 14,
+    slug: 'voile-soie-nuit',
     nameFR: 'Voile Soie Nuit',
     nameEN: 'Midnight Silk Veil',
     price:  '£115',

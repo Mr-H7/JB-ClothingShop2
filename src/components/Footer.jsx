@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import GoldDivider from './GoldDivider'
 import { useLang } from '../contexts/LangContext'
+import { api } from '../lib/api'
 
 export default function Footer() {
   const { t, lang } = useLang()
@@ -9,6 +10,19 @@ export default function Footer() {
   const year = new Date().getFullYear()
   const [nlEmail, setNlEmail] = useState('')
   const [nlDone,  setNlDone]  = useState(false)
+  const [nlLoading, setNlLoading] = useState(false)
+  const handleNewsletter = async e => {
+    e.preventDefault()
+    if (!nlEmail) return
+    setNlLoading(true)
+    try { await api.post('/newsletter', { email: nlEmail, language: lang }) }
+    catch {}
+    finally {
+      setNlDone(true)
+      setNlEmail('')
+      setNlLoading(false)
+    }
+  }
 
   return (
     <footer className="bg-[#0a0a0a] border-t border-[#1a1a1a]">
@@ -32,7 +46,7 @@ export default function Footer() {
             ) : (
               <form
                 className="flex gap-0 flex-1 max-w-md"
-                onSubmit={e => { e.preventDefault(); setNlDone(true); setNlEmail('') }}
+                onSubmit={handleNewsletter}
               >
                 <input
                   type="email" required
@@ -41,7 +55,7 @@ export default function Footer() {
                   placeholder={lang === 'FR' ? 'Votre adresse email' : 'Your email address'}
                   className="input-luxury rounded-none rounded-l-full flex-1 text-sm border-r-0"
                 />
-                <button type="submit" className="btn-gold-solid rounded-none rounded-r-full px-6 text-[0.58rem] whitespace-nowrap">
+                <button type="submit" disabled={nlLoading} className={`btn-gold-solid rounded-none rounded-r-full px-6 text-[0.58rem] whitespace-nowrap ${nlLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
                   {f.newsletterCta}
                 </button>
               </form>

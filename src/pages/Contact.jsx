@@ -1,22 +1,50 @@
 import { useState } from 'react'
 import GoldDivider from '../components/GoldDivider'
 import { useLang } from '../contexts/LangContext'
+import { api } from '../lib/api'
 
 export default function Contact() {
   const { lang, t }          = useLang()
   const tc                   = t.contact
 
   const [submitted,      setSubmitted]      = useState(false)
+  const [submitting,     setSubmitting]     = useState(false)
+  const [submitError,    setSubmitError]    = useState('')
   const [newsletterDone, setNewsletterDone] = useState(false)
+  const [nlSubmitting,   setNlSubmitting]   = useState(false)
   const [nlEmail,        setNlEmail]        = useState('')
   const [openFaq,        setOpenFaq]        = useState(null)
   const [form, setForm] = useState({ email: '', phone: '', message: '' })
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault()
-    setSubmitted(true)
-    setForm({ email: '', phone: '', message: '' })
+    setSubmitError('')
+    setSubmitting(true)
+    try {
+      await api.post('/contact', { email: form.email, phone: form.phone, message: form.message })
+      setSubmitted(true)
+      setForm({ email: '', phone: '', message: '' })
+    } catch (err) {
+      setSubmitError(err?.data?.error || (lang === 'FR' ? 'Échec de l\'envoi.' : 'Send failed.'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+  const handleNewsletter = async e => {
+    e.preventDefault()
+    if (!nlEmail) return
+    setNlSubmitting(true)
+    try {
+      await api.post('/newsletter', { email: nlEmail, language: lang })
+      setNewsletterDone(true)
+      setNlEmail('')
+    } catch {
+      setNewsletterDone(true)
+      setNlEmail('')
+    } finally {
+      setNlSubmitting(false)
+    }
   }
 
   const contactDetails = [
@@ -140,7 +168,7 @@ export default function Contact() {
             ) : (
               <form
                 className="flex gap-0 flex-1 max-w-md"
-                onSubmit={e => { e.preventDefault(); setNewsletterDone(true); setNlEmail('') }}
+                onSubmit={handleNewsletter}
               >
                 <input
                   type="email" required
@@ -149,7 +177,7 @@ export default function Contact() {
                   placeholder={lang === 'FR' ? 'Votre adresse email' : 'Your email address'}
                   className="input-luxury rounded-none rounded-l-full flex-1 border-r-0 text-sm"
                 />
-                <button type="submit" className="btn-gold-solid rounded-none rounded-r-full px-7 text-[0.6rem] whitespace-nowrap">
+                <button type="submit" disabled={nlSubmitting} className={`btn-gold-solid rounded-none rounded-r-full px-7 text-[0.6rem] whitespace-nowrap ${nlSubmitting ? 'opacity-60 cursor-not-allowed' : ''}`}>
                   {tc.nlCta}
                 </button>
               </form>
@@ -216,12 +244,17 @@ export default function Contact() {
                       placeholder={lang === 'FR' ? 'Comment pouvons-nous vous aider ?' : 'How can we assist you today?'}
                     />
                   </div>
+                  {submitError && (
+                    <p className="text-red-400 text-xs tracking-wider">{submitError}</p>
+                  )}
                   <GoldDivider />
                   <div className="flex items-center justify-between pt-1">
                     <p className="text-[#3a3a3a] text-xs font-light">
                       {lang === 'FR' ? 'Réponse sous 24 heures.' : 'We reply within 24 hours.'}
                     </p>
-                    <button type="submit" className="btn-gold-solid px-8">{tc.formSubmit}</button>
+                    <button type="submit" disabled={submitting} className={`btn-gold-solid px-8 ${submitting ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                      {submitting ? (lang === 'FR' ? 'Envoi…' : 'Sending…') : tc.formSubmit}
+                    </button>
                   </div>
                 </form>
               )}

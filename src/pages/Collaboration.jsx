@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import GoldDivider from '../components/GoldDivider'
 import { useLang } from '../contexts/LangContext'
+import { api } from '../lib/api'
 
 /* ── Bilingual collaboration type cards ───────────────────────────────────── */
 const collabTypes = [
@@ -114,13 +115,24 @@ export default function Collaboration() {
 
   const [selected,  setSelected]  = useState(null)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [form, setForm] = useState({ name: '', email: '', phone: '', type: '', message: '' })
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault()
-    setSubmitted(true)
-    setForm({ name: '', email: '', phone: '', type: '', message: '' })
+    setSubmitError('')
+    setSubmitting(true)
+    try {
+      await api.post('/collaboration', form)
+      setSubmitted(true)
+      setForm({ name: '', email: '', phone: '', type: '', message: '' })
+    } catch (err) {
+      setSubmitError(err?.data?.error || (lang === 'FR' ? 'Échec de l\'envoi.' : 'Send failed.'))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -464,12 +476,16 @@ export default function Collaboration() {
                   </p>
                 </div>
 
+                {submitError && (
+                  <p className="text-red-400 text-xs tracking-wider">{submitError}</p>
+                )}
+
                 <GoldDivider />
 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
                   <p className="text-[#3a3a3a] text-xs font-light">{tc.formPrivacy}</p>
-                  <button type="submit" className="btn-gold-solid whitespace-nowrap px-10">
-                    {tc.formSubmit}
+                  <button type="submit" disabled={submitting} className={`btn-gold-solid whitespace-nowrap px-10 ${submitting ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                    {submitting ? (lang === 'FR' ? 'Envoi…' : 'Sending…') : tc.formSubmit}
                   </button>
                 </div>
               </form>
