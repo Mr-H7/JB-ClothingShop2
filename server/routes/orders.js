@@ -20,8 +20,9 @@ router.post('/', optionalAuth, async (req, res) => {
 
     let total = 0
     const orderItems = cartItems.map(item => {
-      const product = bySlug[item.productSlug] || byId[item.productId] || bySlug[item.productId]
-      if (!product) throw new Error(`Product ${item.productSlug || item.productId} not found`)
+      const ref = item.productSlug || item.productId
+      const product = bySlug[ref] || byId[ref]
+      if (!product) throw new Error(`Product ${ref} not found`)
       const line = product.price * item.quantity
       total += line
       return {
