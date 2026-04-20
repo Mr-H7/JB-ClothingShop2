@@ -5,6 +5,7 @@ import { useLang } from '../contexts/LangContext'
 import { useCart } from '../contexts/CartContext'
 import { products } from './Shop'
 import { CAT_FR } from '../i18n/index.js'
+import { openWhatsapp, buildSingleProductMessage } from '../lib/whatsapp'
 
 /* Volume/option definitions per category */
 const OPTIONS = {
@@ -33,9 +34,11 @@ export default function Product() {
   const [qty,      setQty]      = useState(1)
   const addToCart = useCart(s => s.add)
 
+  const priceNumber = parseInt(String(product.price).replace(/\D/g, ''), 10) * 100
+  const effectiveQty = opts ? 1 : qty
+
   const handleAdd = () => {
     if (opts && !selected) return
-    const priceNumber = parseInt(String(product.price).replace(/\D/g, ''), 10) * 100
     addToCart(
       {
         id: product.slug || String(product.id),
@@ -44,12 +47,26 @@ export default function Product() {
         price: priceNumber,
         imgUrl: product.img,
       },
-      opts ? 1 : qty,
+      effectiveQty,
       selected || ''
     )
     setAdded(true)
     setTimeout(() => setAdded(false), 2200)
   }
+
+  const handleWhatsapp = () => {
+    if (opts && !selected) return
+    openWhatsapp(
+      buildSingleProductMessage(
+        { nameFR: product.nameFR, nameEN: product.nameEN, price: priceNumber },
+        effectiveQty,
+        selected || '',
+        lang
+      )
+    )
+  }
+
+  const waLabel = lang === 'FR' ? 'Commander via WhatsApp' : 'Order via WhatsApp'
 
   // Nearby products (same category, different id)
   const related = products.filter(pr => pr.cat === product.cat && pr.id !== product.id).slice(0, 4)
@@ -163,21 +180,34 @@ export default function Product() {
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 mt-1">
+            <div className="flex flex-col gap-3 mt-1">
               <button
-                onClick={handleAdd}
-                className={`flex-1 btn-gold-solid py-4 text-[0.62rem] ${opts && !selected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={handleWhatsapp}
+                className={`btn-gold-solid py-4 text-[0.62rem] flex items-center justify-center gap-3 ${opts && !selected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={opts && !selected}
               >
-                {added ? p.added : p.addToCart}
-              </button>
-              <button
-                className="w-14 h-14 border border-[#2a2a2a] hover:border-gold transition-colors flex items-center justify-center text-[#4a4a4a] hover:text-gold"
-                aria-label={p.wishlist}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 21.785h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/>
                 </svg>
+                {waLabel}
               </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAdd}
+                  className={`flex-1 py-4 text-[0.62rem] tracking-widest uppercase border border-gold/40 text-gold hover:bg-gold hover:text-black transition-colors font-semibold ${opts && !selected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={opts && !selected}
+                >
+                  {added ? p.added : p.addToCart}
+                </button>
+                <button
+                  className="w-14 h-14 border border-[#2a2a2a] hover:border-gold transition-colors flex items-center justify-center text-[#4a4a4a] hover:text-gold"
+                  aria-label={p.wishlist}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Details table */}
