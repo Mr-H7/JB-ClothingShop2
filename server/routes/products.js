@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
     }
     const products = await prisma.product.findMany({
       where,
-      include: { category: true, inventory: true },
+      include: { category: true },
       orderBy: { nameFR: 'asc' },
     })
     res.json(products)
@@ -29,7 +29,7 @@ router.get('/:id', async (req, res) => {
   try {
     const product = await prisma.product.findUnique({
       where: { id: req.params.id },
-      include: { category: true, inventory: true },
+      include: { category: true },
     })
     if (!product || product.status === 'ARCHIVED') return res.status(404).json({ error: 'Not found' })
 

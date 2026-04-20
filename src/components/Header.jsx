@@ -93,23 +93,11 @@ export default function Header() {
             ))}
           </div>
 
-          {/* Account */}
-          <Link
-            to="/account"
-            className="text-white/55 hover:text-gold transition-colors duration-300"
-            aria-label={t.nav.account}
-          >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </Link>
-
-          {/* Cart — navigates to checkout */}
+          {/* Cart */}
           <button
             className="relative text-white/55 hover:text-gold transition-colors duration-300"
-            aria-label="Panier"
-            onClick={() => navigate('/checkout')}
+            aria-label={lang === 'FR' ? 'Panier' : 'Cart'}
+            onClick={() => navigate('/cart')}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
@@ -177,11 +165,8 @@ export default function Header() {
           ))}
           <div className="gold-divider mt-1" />
           <div className="flex items-center gap-4 pt-1">
-            <Link to="/account" className="text-[0.62rem] tracking-widest uppercase text-[#4a4a4a] hover:text-gold transition-colors">
-              {t.nav.account}
-            </Link>
-            <button onClick={() => navigate('/checkout')} className="text-[#4a4a4a] hover:text-gold transition-colors text-[0.62rem] tracking-widest uppercase">
-              Panier ({cartCount})
+            <button onClick={() => navigate('/cart')} className="text-[#4a4a4a] hover:text-gold transition-colors text-[0.62rem] tracking-widest uppercase">
+              {lang === 'FR' ? 'Panier' : 'Cart'} ({cartCount})
             </button>
             <Link to="/shop" className="btn-gold-solid py-2 px-5 text-[0.58rem] ml-auto">
               {t.nav.shopNow}
