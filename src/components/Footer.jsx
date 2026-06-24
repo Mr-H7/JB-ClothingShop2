@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import GoldDivider from './GoldDivider'
 import { useLang } from '../contexts/LangContext'
 import { api } from '../lib/api'
+import { BUSINESS } from '../data/business'
 
 export default function Footer() {
   const { t, lang } = useLang()
@@ -10,16 +11,21 @@ export default function Footer() {
   const year = new Date().getFullYear()
   const [nlEmail, setNlEmail] = useState('')
   const [nlDone,  setNlDone]  = useState(false)
+  const [nlError, setNlError] = useState('')
   const [nlLoading, setNlLoading] = useState(false)
+
   const handleNewsletter = async e => {
     e.preventDefault()
     if (!nlEmail) return
+    setNlError('')
     setNlLoading(true)
-    try { await api.post('/newsletter', { email: nlEmail, language: lang }) }
-    catch {}
-    finally {
+    try {
+      await api.post('/newsletter', { email: nlEmail, language: lang })
       setNlDone(true)
       setNlEmail('')
+    } catch {
+      setNlError(lang === 'FR' ? 'Impossible de vous inscrire pour le moment.' : 'Unable to subscribe right now.')
+    } finally {
       setNlLoading(false)
     }
   }
@@ -44,21 +50,26 @@ export default function Footer() {
                 {lang === 'FR' ? 'Merci pour votre inscription.' : 'Thank you for subscribing.'}
               </div>
             ) : (
-              <form
-                className="flex gap-0 flex-1 max-w-md"
-                onSubmit={handleNewsletter}
-              >
-                <input
-                  type="email" required
-                  value={nlEmail}
-                  onChange={e => setNlEmail(e.target.value)}
-                  placeholder={lang === 'FR' ? 'Votre adresse email' : 'Your email address'}
-                  className="input-luxury rounded-none rounded-l-full flex-1 text-sm border-r-0"
-                />
-                <button type="submit" disabled={nlLoading} className={`btn-gold-solid rounded-none rounded-r-full px-6 text-[0.58rem] whitespace-nowrap ${nlLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
-                  {f.newsletterCta}
-                </button>
-              </form>
+              <div className="flex-1 max-w-md w-full">
+                <form
+                  className="flex flex-col sm:flex-row gap-2 sm:gap-0"
+                  onSubmit={handleNewsletter}
+                >
+                  <input
+                    type="email" required
+                    value={nlEmail}
+                    onChange={e => setNlEmail(e.target.value)}
+                    placeholder={lang === 'FR' ? 'Votre adresse email' : 'Your email address'}
+                    className="input-luxury rounded-full sm:rounded-none sm:rounded-l-full flex-1 text-sm sm:border-r-0"
+                  />
+                  <button type="submit" disabled={nlLoading} className={`btn-gold-solid rounded-full sm:rounded-none sm:rounded-r-full px-6 text-[0.58rem] whitespace-nowrap ${nlLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                    {nlLoading ? (lang === 'FR' ? 'Envoi...' : 'Sending...') : f.newsletterCta}
+                  </button>
+                </form>
+                {nlError && (
+                  <p className="text-red-400 text-xs tracking-wide mt-2">{nlError}</p>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -70,18 +81,25 @@ export default function Footer() {
 
           {/* Brand Column */}
           <div className="lg:col-span-1">
-            <Link to="/" className="inline-flex flex-col mb-6">
-              <span className="font-serif text-3xl font-bold tracking-wider text-white">JB</span>
-              <span className="label-gold" style={{ fontSize: '0.52rem', letterSpacing: '0.38em' }}>CLOTHING</span>
+            <Link to="/" className="inline-flex items-center gap-3 mb-6">
+              <img src={BUSINESS.logo} alt="JB Clothing" className="h-16 w-16 rounded-sm object-contain" />
+              <span className="flex flex-col">
+                <span className="font-serif text-2xl font-bold tracking-wider text-white">JB</span>
+                <span className="label-gold" style={{ fontSize: '0.52rem', letterSpacing: '0.38em' }}>CLOTHING</span>
+              </span>
             </Link>
             <p className="text-[#4a4a4a] text-sm leading-relaxed font-light max-w-xs">
               {f.tagline}
             </p>
             <div className="flex gap-3 mt-8">
-              {['instagram', 'pinterest', 'tiktok'].map(platform => (
+              {[
+                { platform: 'instagram', href: BUSINESS.instagramUrl },
+              ].map(({ platform, href }) => (
                 <a
                   key={platform}
-                  href="#"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-9 h-9 border border-[#2a2a2a] rounded-full flex items-center justify-center text-[#4a4a4a] hover:border-gold hover:text-gold transition-all duration-300 hover:scale-110"
                   aria-label={platform}
                 >
@@ -102,23 +120,17 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Maison Column — only "Notre Histoire" remains */}
+          {/* Maison Column */}
           <div>
             <h4 className="label-gold mb-5">{f.colMaison}</h4>
-            <ul className="space-y-3">
+            <ul className="space-y-3 text-[#4a4a4a] text-sm font-light">
+              <li>{BUSINESS.addressLines[0]}</li>
+              <li>{BUSINESS.addressLines[1]}</li>
+              <li>{BUSINESS.addressLines[2]}</li>
               <li>
-                <Link
-                  to="/#story"
-                  onClick={e => {
-                    e.preventDefault()
-                    const el = document.getElementById('story')
-                    if (el) el.scrollIntoView({ behavior: 'smooth' })
-                    else window.location.href = '/'
-                  }}
-                  className="text-[#4a4a4a] text-sm hover:text-gold transition-colors duration-300 font-light"
-                >
-                  {f.story}
-                </Link>
+                <a href={BUSINESS.mapsUrl} target="_blank" rel="noopener noreferrer" className="hover:text-gold transition-colors duration-300">
+                  {lang === 'FR' ? 'Ouvrir Google Maps' : 'Open Google Maps'}
+                </a>
               </li>
             </ul>
           </div>
@@ -147,6 +159,7 @@ export default function Footer() {
             { label: f.privacy,  href: '/contact' },
             { label: f.terms,    href: '/contact' },
             { label: f.cookies,  href: '/contact' },
+            { label: 'Admin',     href: '/admin' },
           ].map(({ label, href }) => (
             <Link key={label} to={href} className="text-[#2a2a2a] text-xs tracking-wide hover:text-gold transition-colors duration-300">
               {label}
@@ -165,16 +178,6 @@ function SocialIcon({ name }) {
         <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
         <circle cx="12" cy="12" r="4"/>
         <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/>
-      </svg>
-    ),
-    pinterest: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.236 2.636 7.855 6.356 9.312-.088-.791-.167-2.005.035-2.868.181-.78 1.172-4.97 1.172-4.97s-.299-.598-.299-1.482c0-1.388.806-2.428 1.808-2.428.853 0 1.267.641 1.267 1.408 0 .858-.546 2.14-.828 3.33-.236.995.499 1.806 1.476 1.806 1.771 0 3.135-1.867 3.135-4.56 0-2.386-1.714-4.053-4.162-4.053-2.836 0-4.498 2.126-4.498 4.326 0 .856.33 1.773.741 2.274a.3.3 0 0 1 .069.286c-.075.314-.243.995-.276 1.134-.044.183-.146.222-.337.134-1.249-.581-2.03-2.407-2.03-3.874 0-3.154 2.292-6.052 6.608-6.052 3.469 0 6.165 2.473 6.165 5.776 0 3.447-2.173 6.22-5.19 6.22-1.013 0-1.966-.527-2.292-1.148l-.623 2.378c-.226.869-.835 1.958-1.244 2.621.937.29 1.931.446 2.962.446 5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
-      </svg>
-    ),
-    tiktok: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/>
       </svg>
     ),
   }

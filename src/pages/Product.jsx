@@ -1,17 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import GoldDivider from '../components/GoldDivider'
 import { useLang } from '../contexts/LangContext'
 import { useCart } from '../contexts/CartContext'
-import { products } from './Shop'
+import ProductVisual from '../components/ProductVisual'
+import { products, formatProductPrice } from '../data/catalog'
 import { CAT_FR } from '../i18n/index.js'
 import { openWhatsapp, buildSingleProductMessage } from '../lib/whatsapp'
 
 /* Volume/option definitions per category */
 const OPTIONS = {
-  'Parfum femme': { FR: ['30 ml', '50 ml', '100 ml'], EN: ['30 ml', '50 ml', '100 ml'] },
-  'Châles':       { FR: ['Unique (200×70 cm)'],        EN: ['One size (200×70 cm)'] },
-  'Voiles en soie':{ FR: ['Unique (180×90 cm)'],       EN: ['One size (180×90 cm)'] },
+  'Parfums': { FR: ['30 ml', '50 ml', '100 ml'], EN: ['30 ml', '50 ml', '100 ml'] },
+  'Châles': { FR: ['Taille unique'], EN: ['One size'] },
+  'Châles en soie': { FR: ['Taille unique'], EN: ['One size'] },
+  'Scarves': { FR: ['Taille unique'], EN: ['One size'] },
 }
 
 export default function Product() {
@@ -21,7 +23,23 @@ export default function Product() {
   const p              = t.product
 
   // Find product from shared catalogue
-  const product = products.find(pr => pr.id === Number(id)) || products[0]
+  const product = products.find(pr => pr.id === Number(id))
+  if (!product) {
+    return (
+      <div className="bg-[#0a0a0a] min-h-screen pt-28">
+        <div className="container-luxury py-16">
+          <div className="luxury-card p-14 text-center max-w-xl mx-auto">
+            <p className="label-gold mb-3">{lang === 'FR' ? 'Produit introuvable' : 'Product not found'}</p>
+            <h1 className="font-serif text-2xl text-white mb-3">{lang === 'FR' ? 'Cette pièce n\'est plus disponible.' : 'This piece is no longer available.'}</h1>
+            <p className="text-[#5a5a5a] text-sm mb-8">{lang === 'FR' ? 'Découvrez le reste de la collection.' : 'Explore the rest of the collection.'}</p>
+            <Link to="/shop" className="btn-gold-solid">
+              {lang === 'FR' ? 'Retour à la boutique' : 'Back to the boutique'}
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const name    = lang === 'FR' ? product.nameFR : product.nameEN
   const desc    = lang === 'FR' ? product.descFR : product.descEN
@@ -32,13 +50,22 @@ export default function Product() {
   const [selected, setSelected] = useState(null)
   const [added,    setAdded]    = useState(false)
   const [qty,      setQty]      = useState(1)
+  const galleryImages = product.img ? [product.img] : []
+  const [activeImage, setActiveImage] = useState(galleryImages[0] || null)
   const addToCart = useCart(s => s.add)
 
-  const priceNumber = parseInt(String(product.price).replace(/\D/g, ''), 10) * 100
+  useEffect(() => {
+    setSelected(null)
+    setQty(1)
+    setActiveImage(galleryImages[0] || null)
+  }, [product.id])
+
+  const priceNumber = product.priceValue
   const effectiveQty = opts ? 1 : qty
 
   const handleAdd = () => {
     if (opts && !selected) return
+    if (priceNumber == null) return
     addToCart(
       {
         id: product.slug || String(product.id),
@@ -67,6 +94,7 @@ export default function Product() {
   }
 
   const waLabel = lang === 'FR' ? 'Commander via WhatsApp' : 'Order via WhatsApp'
+  const cartDisabled = (opts && !selected) || priceNumber == null
 
   // Nearby products (same category, different id)
   const related = products.filter(pr => pr.cat === product.cat && pr.id !== product.id).slice(0, 4)
@@ -92,11 +120,11 @@ export default function Product() {
               className="luxury-card overflow-hidden relative bg-[#161616]"
               style={{ aspectRatio: '3/4' }}
             >
-              <img
-                src={product.img}
+              <ProductVisual
+                product={{ ...product, img: activeImage || product.img }}
                 alt={name}
-                className="w-full h-full object-cover"
-                onError={e => { e.currentTarget.style.display = 'none' }}
+                className="absolute inset-0"
+                imageClassName="absolute inset-0 w-full h-full object-cover"
               />
               {tag && (
                 <div className="absolute top-5 left-5">
@@ -107,22 +135,26 @@ export default function Product() {
               )}
             </div>
             {/* Thumbnail row */}
+            {galleryImages.length > 0 && (
             <div className="grid grid-cols-3 gap-3">
-              {[0, 1, 2].map(n => (
-                <div
-                  key={n}
-                  className={`luxury-card overflow-hidden cursor-pointer bg-[#161616] ${n === 0 ? 'border-gold/40' : ''}`}
+              {galleryImages.map(img => (
+                <button
+                  type="button"
+                  key={img}
+                  onClick={() => setActiveImage(img)}
+                  className={`luxury-card overflow-hidden bg-[#161616] ${activeImage === img ? 'border-gold/40' : ''}`}
                   style={{ aspectRatio: '1' }}
                 >
                   <img
-                    src={`${product.img.split('?')[0]}?auto=format&fit=crop&w=200&q=70`}
+                    src={img}
                     alt=""
                     className="w-full h-full object-cover opacity-60 hover:opacity-100 transition-opacity"
                     onError={e => { e.currentTarget.style.display = 'none' }}
                   />
-                </div>
+                </button>
               ))}
             </div>
+            )}
           </div>
 
           {/* ── Info ── */}
@@ -130,7 +162,7 @@ export default function Product() {
             <div>
               <p className="label-gold mb-2">{catLabel}</p>
               <h1 className="heading-luxury text-3xl md:text-4xl lg:text-5xl text-white mb-4 leading-tight">{name}</h1>
-              <p className="text-3xl text-gold font-serif font-semibold">{product.price}</p>
+              <p className="text-3xl text-gold font-serif font-semibold">{formatProductPrice(product, lang)}</p>
             </div>
 
             <GoldDivider />
@@ -140,7 +172,7 @@ export default function Product() {
             {/* Options selector — only shown for relevant categories */}
             {opts ? (
               <div>
-                <p className="label-gold mb-3">{product.cat === 'Parfum femme' ? p.volumeLabel : p.sizeLabel} <span className="text-gold/40">*</span></p>
+                <p className="label-gold mb-3">{product.cat === 'Parfums' ? p.volumeLabel : p.sizeLabel} <span className="text-gold/40">*</span></p>
                 <div className="flex gap-2 flex-wrap">
                   {opts[lang]?.map(opt => (
                     <button
@@ -194,17 +226,20 @@ export default function Product() {
               <div className="flex gap-3">
                 <button
                   onClick={handleAdd}
-                  className={`flex-1 py-4 text-[0.62rem] tracking-widest uppercase border border-gold/40 text-gold hover:bg-gold hover:text-black transition-colors font-semibold ${opts && !selected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={opts && !selected}
+                  className={`flex-1 py-4 text-[0.62rem] tracking-widest uppercase border border-gold/40 text-gold hover:bg-gold hover:text-black transition-colors font-semibold ${cartDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={cartDisabled}
                 >
-                  {added ? p.added : p.addToCart}
+                  {priceNumber == null ? (lang === 'FR' ? 'Prix à confirmer' : 'Confirm price') : (added ? p.added : p.addToCart)}
                 </button>
                 <button
+                  onClick={() => navigate('/cart')}
                   className="w-14 h-14 border border-[#2a2a2a] hover:border-gold transition-colors flex items-center justify-center text-[#4a4a4a] hover:text-gold"
-                  aria-label={p.wishlist}
+                  aria-label={lang === 'FR' ? 'Voir le panier' : 'View cart'}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
                   </svg>
                 </button>
               </div>
@@ -218,7 +253,7 @@ export default function Product() {
                 { label: p.care,     value: lang === 'FR' ? product.care?.FR     : product.care?.EN     },
                 {
                   label: p.delivery,
-                  value: lang === 'FR' ? 'Express 1–2 jours, Standard 3–5 jours. Offerte dès £150.' : 'Express 1–2 days, Standard 3–5 days. Free from £150.'
+                  value: lang === 'FR' ? 'Confirmation et livraison via WhatsApp.' : 'Confirmation and delivery via WhatsApp.'
                 },
               ].map(({ label, value }) => (
                 <div key={label} className="flex items-start justify-between py-4 px-5 gap-4">
@@ -252,11 +287,11 @@ export default function Product() {
               {related.map(rel => (
                 <Link key={rel.id} to={`/product/${rel.id}`} className="luxury-card group">
                   <div className="relative overflow-hidden bg-[#161616]" style={{ aspectRatio: '3/4' }}>
-                    <img
-                      src={rel.img}
+                    <ProductVisual
+                      product={rel}
                       alt={lang === 'FR' ? rel.nameFR : rel.nameEN}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      onError={e => { e.currentTarget.style.display = 'none' }}
+                      className="absolute inset-0 transition-transform duration-700 group-hover:scale-105"
+                      imageClassName="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-[rgba(201,168,76,0.06)] to-transparent" />
                   </div>
@@ -264,7 +299,7 @@ export default function Product() {
                     <h3 className="font-serif text-sm text-white group-hover:text-gold transition-colors duration-300 mb-1.5">
                       {lang === 'FR' ? rel.nameFR : rel.nameEN}
                     </h3>
-                    <p className="text-gold font-semibold text-sm">{rel.price}</p>
+                    <p className="text-gold font-semibold text-sm">{formatProductPrice(rel, lang)}</p>
                   </div>
                 </Link>
               ))}

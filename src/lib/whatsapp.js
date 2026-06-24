@@ -1,11 +1,13 @@
-export const WHATSAPP_NUMBER = '212666200124'
+import { BUSINESS } from '../data/business'
+
+export const WHATSAPP_NUMBER = BUSINESS.whatsappNumber
 
 function formatPrice(pence, lang) {
   const v = (pence / 100).toLocaleString(lang === 'FR' ? 'fr-FR' : 'en-GB', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   })
-  return lang === 'FR' ? `${v} £` : `£${v}`
+  return lang === 'FR' ? `${v} MAD` : `MAD ${v}`
 }
 
 export function buildSingleProductMessage(product, quantity, variant, lang) {

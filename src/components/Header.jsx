@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useLang } from '../contexts/LangContext'
 import { useCart } from '../contexts/CartContext'
+import { BUSINESS } from '../data/business'
 
 export default function Header() {
   const [scrolled,  setScrolled]  = useState(false)
@@ -40,12 +41,19 @@ export default function Header() {
       <div className="container-luxury flex items-center justify-between gap-6">
 
         {/* ── Logo ── */}
-        <Link to="/" className="group flex flex-col leading-none select-none flex-shrink-0">
-          <span className="font-serif text-2xl font-bold tracking-wider text-white group-hover:text-gold transition-colors duration-300">
-            JB
-          </span>
-          <span className="label-gold" style={{ fontSize: '0.52rem', letterSpacing: '0.38em' }}>
-            CLOTHING
+        <Link to="/" className="group flex items-center gap-3 select-none flex-shrink-0">
+          <img
+            src={BUSINESS.logo}
+            alt="JB Clothing"
+            className="h-12 w-12 rounded-sm object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+          <span className="hidden sm:flex flex-col leading-none">
+            <span className="font-serif text-xl font-bold tracking-wider text-white group-hover:text-gold transition-colors duration-300">
+              JB
+            </span>
+            <span className="label-gold" style={{ fontSize: '0.48rem', letterSpacing: '0.34em' }}>
+              CLOTHING
+            </span>
           </span>
         </Link>
 

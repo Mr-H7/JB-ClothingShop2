@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import prisma from '../lib/prisma.js'
+import { supabase } from '../lib/supabase.js'
 
 const router = Router()
 
@@ -10,9 +10,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'name, email, type and message required' })
     }
 
-    await prisma.collaborationSubmission.create({
-      data: { name, email: email.toLowerCase(), phone, type, message },
-    })
+    await supabase.createCollaborationSubmission({ name, email: email.toLowerCase(), phone, type, message })
     res.status(201).json({ ok: true })
   } catch (err) {
     console.error(err)

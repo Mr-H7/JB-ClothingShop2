@@ -1,0 +1,4 @@
+
+> jb-clothingshop2@1.0.0 dev
+> concurrently "vite" "node server/index.js" --host 0.0.0.0
+
