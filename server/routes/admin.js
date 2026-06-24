@@ -1,190 +1,136 @@
 import { Router } from 'express'
-import prisma from '../lib/prisma.js'
-import { requireAdmin } from '../middleware/auth.js'
-import { upload } from '../middleware/upload.js'
+import crypto from 'crypto'
+import { supabase } from '../lib/supabase.js'
+import { products as catalogProducts } from '../../src/data/catalog.js'
 
 const router = Router()
-router.use(requireAdmin)
+const COOKIE_NAME = 'jb_admin_session'
+const SESSION_TTL_MS = 1000 * 60 * 60 * 8
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'ayoubjb'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'jbayoub1@'
+const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex')
 
-router.get('/dashboard', async (req, res) => {
-  try {
-    const [totalOrders, pendingOrders, totalRevenue, newLeads] = await Promise.all([
-      prisma.order.count(),
-      prisma.order.count({ where: { status: 'PENDING' } }),
-      prisma.order.aggregate({ _sum: { total: true } }),
-      prisma.newsletterLead.count({
-        where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
-      }),
-    ])
-    res.json({ totalOrders, pendingOrders, totalRevenue: totalRevenue._sum.total || 0, newLeads })
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch dashboard' })
-  }
-})
+function sign(value) {
+  return crypto.createHmac('sha256', SESSION_SECRET).update(value).digest('base64url')
+}
 
-// Products
-router.get('/products', async (req, res) => {
+function readCookies(req) {
+  return Object.fromEntries(
+    String(req.headers.cookie || '')
+      .split(';')
+      .map(cookie => cookie.trim())
+      .filter(Boolean)
+      .map(cookie => {
+        const index = cookie.indexOf('=')
+        return [cookie.slice(0, index), decodeURIComponent(cookie.slice(index + 1))]
+      })
+  )
+}
+
+function sessionCookie(token, req) {
+  const secure = req.secure || req.headers['x-forwarded-proto'] === 'https'
+  return [
+    `${COOKIE_NAME}=${encodeURIComponent(token)}`,
+    'HttpOnly',
+    'SameSite=Lax',
+    'Path=/',
+    `Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`,
+    secure ? 'Secure' : '',
+  ].filter(Boolean).join('; ')
+}
+
+function clearCookie() {
+  return `${COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`
+}
+
+function createToken() {
+  const payload = Buffer.from(JSON.stringify({
+    sub: ADMIN_USERNAME,
+    exp: Date.now() + SESSION_TTL_MS,
+  })).toString('base64url')
+  return `${payload}.${sign(payload)}`
+}
+
+function verifyToken(token) {
+  if (!token || !token.includes('.')) return false
+  const [payload, signature] = token.split('.')
+  const expected = sign(payload)
+  if (
+    signature.length !== expected.length ||
+    !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+  ) return false
+
   try {
-    const products = await prisma.product.findMany({
-      include: { category: true, inventory: true },
-      orderBy: { nameFR: 'asc' },
-    })
-    res.json(products)
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
+    return data.sub === ADMIN_USERNAME && data.exp > Date.now()
   } catch {
-    res.status(500).json({ error: 'Failed to fetch products' })
+    return false
   }
+}
+
+function checkPassword(candidate) {
+  const salt = 'jb-clothing-admin-v1'
+  const expected = crypto.scryptSync(ADMIN_PASSWORD, salt, 32)
+  const received = crypto.scryptSync(String(candidate || ''), salt, 32)
+  return crypto.timingSafeEqual(expected, received)
+}
+
+function requireAdmin(req, res, next) {
+  const token = readCookies(req)[COOKIE_NAME]
+  if (!verifyToken(token)) return res.status(401).json({ error: 'Unauthorized' })
+  next()
+}
+
+function normalizeSubmission(row) {
+  if (!row) return row
+  return {
+    ...row,
+    createdAt: row.created_at,
+    readAt: row.read_at,
+  }
+}
+
+router.post('/login', (req, res) => {
+  const { username, password } = req.body || {}
+  if (username !== ADMIN_USERNAME || !checkPassword(password)) {
+    return res.status(401).json({ error: 'Invalid credentials' })
+  }
+
+  const token = createToken()
+  res.setHeader('Set-Cookie', sessionCookie(token, req))
+  res.json({ user: { username: ADMIN_USERNAME } })
 })
 
-router.post('/products', async (req, res) => {
-  try {
-    const { slug, nameFR, nameEN, descFR = '', descEN = '', price, categoryId,
-      materialFR = '', materialEN = '', originFR = '', originEN = '', careFR = '', careEN = '',
-      tagFR = '', tagEN = '', imgUrl = '', status = 'ACTIVE' } = req.body
-    if (!slug || !nameFR || !nameEN || !price || !categoryId) {
-      return res.status(400).json({ error: 'slug, nameFR, nameEN, price, categoryId required' })
-    }
-    const product = await prisma.product.create({
-      data: {
-        slug, nameFR, nameEN, descFR, descEN, price: parseInt(price), categoryId,
-        materialFR, materialEN, originFR, originEN, careFR, careEN, tagFR, tagEN, imgUrl, status,
-        inventory: { create: { stock: 999 } },
-      },
-      include: { category: true, inventory: true },
-    })
-    res.status(201).json(product)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to create product' })
-  }
+router.post('/logout', (req, res) => {
+  res.setHeader('Set-Cookie', clearCookie())
+  res.json({ ok: true })
 })
 
-router.patch('/products/:id', async (req, res) => {
-  try {
-    const data = { ...req.body }
-    if (data.price) data.price = parseInt(data.price)
-    delete data.id
-    const product = await prisma.product.update({
-      where: { id: req.params.id },
-      data,
-      include: { category: true, inventory: true },
-    })
-    res.json(product)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to update product' })
-  }
+router.get('/me', requireAdmin, (req, res) => {
+  res.json({ user: { username: ADMIN_USERNAME } })
 })
 
-router.delete('/products/:id', async (req, res) => {
-  try {
-    await prisma.product.update({ where: { id: req.params.id }, data: { status: 'ARCHIVED' } })
-    res.json({ ok: true })
-  } catch {
-    res.status(500).json({ error: 'Failed to archive product' })
-  }
+router.get('/summary', requireAdmin, async (req, res) => {
+  const [contacts, collaborations, newsletter, products] = await Promise.all([
+    supabase.count('contact_submissions'),
+    supabase.count('collaboration_submissions'),
+    supabase.count('newsletter_leads'),
+    Promise.resolve(catalogProducts.length),
+  ])
+  res.json({ contacts, collaborations, newsletter, products })
 })
 
-router.post('/upload', upload.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
-  const url = `/uploads/${req.file.filename}`
-  res.json({ url })
-})
-
-// Orders
-router.get('/orders', async (req, res) => {
-  try {
-    const orders = await prisma.order.findMany({
-      include: { items: { include: { product: true } }, user: { include: { profile: true } } },
-      orderBy: { createdAt: 'desc' },
-    })
-    res.json(orders)
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch orders' })
-  }
-})
-
-router.patch('/orders/:id', async (req, res) => {
-  try {
-    const { status } = req.body
-    const validStatuses = ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED']
-    if (!validStatuses.includes(status)) return res.status(400).json({ error: 'Invalid status' })
-    const order = await prisma.order.update({ where: { id: req.params.id }, data: { status } })
-    res.json(order)
-  } catch {
-    res.status(500).json({ error: 'Failed to update order' })
-  }
-})
-
-// Customers
-router.get('/customers', async (req, res) => {
-  try {
-    const users = await prisma.user.findMany({
-      include: { profile: true, _count: { select: { orders: true } } },
-      orderBy: { createdAt: 'desc' },
-    })
-    res.json(users.map(u => ({
-      id: u.id, email: u.email, role: u.role, createdAt: u.createdAt,
-      profile: u.profile, orderCount: u._count.orders,
-    })))
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch customers' })
-  }
-})
-
-// Leads
-router.get('/newsletter', async (req, res) => {
-  try {
-    const leads = await prisma.newsletterLead.findMany({ orderBy: { createdAt: 'desc' } })
-    res.json(leads)
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch newsletter leads' })
-  }
-})
-
-router.get('/contact', async (req, res) => {
-  try {
-    const submissions = await prisma.contactSubmission.findMany({ orderBy: { createdAt: 'desc' } })
-    res.json(submissions)
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch contact submissions' })
-  }
-})
-
-router.patch('/contact/:id/read', async (req, res) => {
-  try {
-    await prisma.contactSubmission.update({ where: { id: req.params.id }, data: { readAt: new Date() } })
-    res.json({ ok: true })
-  } catch {
-    res.status(500).json({ error: 'Failed to mark as read' })
-  }
-})
-
-router.get('/collaborations', async (req, res) => {
-  try {
-    const submissions = await prisma.collaborationSubmission.findMany({ orderBy: { createdAt: 'desc' } })
-    res.json(submissions)
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch collaboration submissions' })
-  }
-})
-
-router.patch('/collaborations/:id/read', async (req, res) => {
-  try {
-    await prisma.collaborationSubmission.update({ where: { id: req.params.id }, data: { readAt: new Date() } })
-    res.json({ ok: true })
-  } catch {
-    res.status(500).json({ error: 'Failed to mark as read' })
-  }
-})
-
-// Categories
-router.get('/categories', async (req, res) => {
-  try {
-    const categories = await prisma.category.findMany({ orderBy: { sortOrder: 'asc' } })
-    res.json(categories)
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch categories' })
-  }
+router.get('/inbox', requireAdmin, async (req, res) => {
+  const [contacts, collaborations, newsletter] = await Promise.all([
+    supabase.list('contact_submissions', 10),
+    supabase.list('collaboration_submissions', 10),
+    supabase.list('newsletter_leads', 10),
+  ])
+  res.json({
+    contacts: contacts.map(normalizeSubmission),
+    collaborations: collaborations.map(normalizeSubmission),
+    newsletter: newsletter.map(normalizeSubmission),
+  })
 })
 
 export default router

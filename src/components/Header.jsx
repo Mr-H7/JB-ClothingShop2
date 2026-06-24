@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useLang } from '../contexts/LangContext'
 import { useCart } from '../contexts/CartContext'
+import { BUSINESS } from '../data/business'
 
 export default function Header() {
   const [scrolled,  setScrolled]  = useState(false)
@@ -40,12 +41,19 @@ export default function Header() {
       <div className="container-luxury flex items-center justify-between gap-6">
 
         {/* ── Logo ── */}
-        <Link to="/" className="group flex flex-col leading-none select-none flex-shrink-0">
-          <span className="font-serif text-2xl font-bold tracking-wider text-white group-hover:text-gold transition-colors duration-300">
-            JB
-          </span>
-          <span className="label-gold" style={{ fontSize: '0.52rem', letterSpacing: '0.38em' }}>
-            CLOTHING
+        <Link to="/" className="group flex items-center gap-3 select-none flex-shrink-0">
+          <img
+            src={BUSINESS.logo}
+            alt="JB Clothing"
+            className="h-12 w-12 rounded-sm object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+          <span className="hidden sm:flex flex-col leading-none">
+            <span className="font-serif text-xl font-bold tracking-wider text-white group-hover:text-gold transition-colors duration-300">
+              JB
+            </span>
+            <span className="label-gold" style={{ fontSize: '0.48rem', letterSpacing: '0.34em' }}>
+              CLOTHING
+            </span>
           </span>
         </Link>
 
@@ -93,23 +101,11 @@ export default function Header() {
             ))}
           </div>
 
-          {/* Account */}
-          <Link
-            to="/account"
-            className="text-white/55 hover:text-gold transition-colors duration-300"
-            aria-label={t.nav.account}
-          >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </Link>
-
-          {/* Cart — navigates to checkout */}
+          {/* Cart */}
           <button
             className="relative text-white/55 hover:text-gold transition-colors duration-300"
-            aria-label="Panier"
-            onClick={() => navigate('/checkout')}
+            aria-label={lang === 'FR' ? 'Panier' : 'Cart'}
+            onClick={() => navigate('/cart')}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
@@ -177,11 +173,8 @@ export default function Header() {
           ))}
           <div className="gold-divider mt-1" />
           <div className="flex items-center gap-4 pt-1">
-            <Link to="/account" className="text-[0.62rem] tracking-widest uppercase text-[#4a4a4a] hover:text-gold transition-colors">
-              {t.nav.account}
-            </Link>
-            <button onClick={() => navigate('/checkout')} className="text-[#4a4a4a] hover:text-gold transition-colors text-[0.62rem] tracking-widest uppercase">
-              Panier ({cartCount})
+            <button onClick={() => navigate('/cart')} className="text-[#4a4a4a] hover:text-gold transition-colors text-[0.62rem] tracking-widest uppercase">
+              {lang === 'FR' ? 'Panier' : 'Cart'} ({cartCount})
             </button>
             <Link to="/shop" className="btn-gold-solid py-2 px-5 text-[0.58rem] ml-auto">
               {t.nav.shopNow}

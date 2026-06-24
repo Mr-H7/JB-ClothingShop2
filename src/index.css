@@ -133,6 +133,7 @@
     border-radius: inherit;
     opacity: 0;
     transition: opacity 0.35s ease;
+    pointer-events: none;
   }
 
   .btn-gold:hover::before {
@@ -199,6 +200,35 @@
     mask-composite: exclude;
     opacity: 0;
     transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  .form-interaction-layer {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+    isolation: isolate;
+  }
+
+  .form-interaction-layer::before {
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .form-interaction-layer label,
+  .form-interaction-layer .gold-divider {
+    position: relative;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .form-interaction-layer input,
+  .form-interaction-layer textarea,
+  .form-interaction-layer select,
+  .form-interaction-layer button {
+    position: relative;
+    z-index: 20;
+    pointer-events: auto;
   }
 
   .luxury-card:hover::before {
