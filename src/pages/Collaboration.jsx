@@ -89,7 +89,7 @@ const collabTypes = [
 const stats = [
   { value: '120+', labelFR: 'Partenaires Mondiaux',        labelEN: 'Partners Worldwide' },
   { value: '38',   labelFR: 'Pays Présents',                labelEN: 'Countries Present' },
-  { value: '£2M+', labelFR: 'Revenus Partenaires Générés',  labelEN: 'Partner Revenue Generated' },
+  { value: '2M MAD+', labelFR: 'Revenus Partenaires Générés',  labelEN: 'Partner Revenue Generated' },
   { value: '94%',  labelFR: 'Taux de Fidélisation',         labelEN: 'Partner Retention Rate' },
 ]
 
@@ -128,8 +128,8 @@ export default function Collaboration() {
       await api.post('/collaboration', form)
       setSubmitted(true)
       setForm({ name: '', email: '', phone: '', type: '', message: '' })
-    } catch (err) {
-      setSubmitError(err?.data?.error || (lang === 'FR' ? 'Échec de l\'envoi.' : 'Send failed.'))
+    } catch {
+      setSubmitError(lang === 'FR' ? 'Impossible d\'envoyer votre demande pour le moment.' : 'Unable to submit your request right now.')
     } finally {
       setSubmitting(false)
     }
@@ -143,7 +143,7 @@ export default function Collaboration() {
       ════════════════════════════════════════════════════════ */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
             background: `
               radial-gradient(ellipse 70% 60% at 50% 40%, rgba(201,168,76,0.07) 0%, transparent 65%),
@@ -152,7 +152,7 @@ export default function Collaboration() {
           }}
         />
         <div
-          className="absolute inset-0 opacity-[0.04]"
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
           style={{
             backgroundImage: `
               repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(201,168,76,0.6) 40px, rgba(201,168,76,0.6) 41px),
@@ -161,10 +161,10 @@ export default function Collaboration() {
           }}
         />
         {/* Corner brackets */}
-        <div className="absolute top-28 left-8 w-16 h-16 border-t border-l border-gold/20" />
-        <div className="absolute top-28 right-8 w-16 h-16 border-t border-r border-gold/20" />
-        <div className="absolute bottom-10 left-8 w-16 h-16 border-b border-l border-gold/20" />
-        <div className="absolute bottom-10 right-8 w-16 h-16 border-b border-r border-gold/20" />
+        <div className="absolute top-28 left-8 w-16 h-16 border-t border-l border-gold/20 pointer-events-none" />
+        <div className="absolute top-28 right-8 w-16 h-16 border-t border-r border-gold/20 pointer-events-none" />
+        <div className="absolute bottom-10 left-8 w-16 h-16 border-b border-l border-gold/20 pointer-events-none" />
+        <div className="absolute bottom-10 right-8 w-16 h-16 border-b border-r border-gold/20 pointer-events-none" />
 
         <div className="container-luxury relative z-10 text-center">
           <div className="animate-fade-up">
@@ -233,7 +233,11 @@ export default function Collaboration() {
             {collabTypes.map((type, i) => (
               <div
                 key={type.id}
-                onClick={() => setSelected(selected === type.id ? null : type.id)}
+                onClick={() => {
+                  const next = selected === type.id ? null : type.id
+                  setSelected(next)
+                  setForm(f => ({ ...f, type: next || f.type }))
+                }}
                 className={`luxury-card group cursor-pointer p-8 transition-all duration-500 animate-fade-up delay-${(i + 1) * 100} ${
                   selected === type.id ? 'border-gold/50 bg-[#161408] shadow-[0_0_40px_rgba(201,168,76,0.12)]' : ''
                 }`}
@@ -287,6 +291,7 @@ export default function Collaboration() {
                     className="mt-5 btn-gold py-2 px-6 text-[0.58rem]"
                     onClick={e => {
                       e.stopPropagation()
+                      setForm(f => ({ ...f, type: type.id }))
                       document.getElementById('collab-form')?.scrollIntoView({ behavior: 'smooth' })
                     }}
                   >
@@ -308,11 +313,11 @@ export default function Collaboration() {
         <div className="container-luxury">
           <div className="relative overflow-hidden" style={{ minHeight: '320px' }}>
             <div
-              className="absolute inset-0 rounded-sm"
+              className="absolute inset-0 rounded-sm pointer-events-none"
               style={{ background: 'linear-gradient(135deg, #121008 0%, #1a1608 50%, #0e0d08 100%)' }}
             />
             <div
-              className="absolute inset-0 opacity-[0.05]"
+              className="absolute inset-0 opacity-[0.05] pointer-events-none"
               style={{
                 backgroundImage: `
                   repeating-linear-gradient(90deg, rgba(201,168,76,1) 0px, rgba(201,168,76,1) 1px, transparent 1px, transparent 48px),
@@ -321,7 +326,7 @@ export default function Collaboration() {
               }}
             />
             <div
-              className="absolute inset-0 opacity-20"
+              className="absolute inset-0 opacity-20 pointer-events-none"
               style={{ background: 'radial-gradient(ellipse 50% 80% at 50% 50%, rgba(201,168,76,0.3) 0%, transparent 70%)' }}
             />
             <div className="relative z-10 flex flex-col items-center justify-center h-full py-20 px-8 text-center">
@@ -404,7 +409,7 @@ export default function Collaboration() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="luxury-card p-8 md:p-12 space-y-6">
+              <form onSubmit={handleSubmit} className="luxury-card form-interaction-layer p-8 md:p-12 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Name */}
                   <div>
@@ -412,7 +417,7 @@ export default function Collaboration() {
                     <input
                       type="text" name="name" required
                       value={form.name} onChange={handleChange}
-                      className="input-luxury"
+                      className="input-luxury relative z-20 pointer-events-auto"
                       placeholder={lang === 'FR' ? 'Votre nom complet' : 'Your full name'}
                     />
                   </div>
@@ -422,7 +427,7 @@ export default function Collaboration() {
                     <input
                       type="email" name="email" required
                       value={form.email} onChange={handleChange}
-                      className="input-luxury"
+                      className="input-luxury relative z-20 pointer-events-auto"
                       placeholder="contact@example.com"
                     />
                   </div>
@@ -432,7 +437,7 @@ export default function Collaboration() {
                     <input
                       type="tel" name="phone"
                       value={form.phone} onChange={handleChange}
-                      className="input-luxury"
+                      className="input-luxury relative z-20 pointer-events-auto"
                       placeholder="+33 6 00 00 00 00"
                     />
                   </div>
@@ -442,7 +447,7 @@ export default function Collaboration() {
                     <select
                       name="type" required
                       value={form.type} onChange={handleChange}
-                      className="input-luxury appearance-none cursor-pointer"
+                      className="input-luxury appearance-none cursor-pointer relative z-20 pointer-events-auto"
                       style={{
                         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23C9A84C' stroke-width='1.5'/%3E%3C/svg%3E")`,
                         backgroundRepeat: 'no-repeat',
@@ -468,7 +473,7 @@ export default function Collaboration() {
                   <textarea
                     name="message" required rows={6}
                     value={form.message} onChange={handleChange}
-                    className="input-luxury resize-none"
+                    className="input-luxury resize-none relative z-20 pointer-events-auto"
                     placeholder={tc.formMsgPh}
                   />
                   <p className="text-[#3a3a3a] text-[0.6rem] mt-1.5 tracking-wide">
@@ -484,8 +489,8 @@ export default function Collaboration() {
 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
                   <p className="text-[#3a3a3a] text-xs font-light">{tc.formPrivacy}</p>
-                  <button type="submit" disabled={submitting} className={`btn-gold-solid whitespace-nowrap px-10 ${submitting ? 'opacity-60 cursor-not-allowed' : ''}`}>
-                    {submitting ? (lang === 'FR' ? 'Envoi…' : 'Sending…') : tc.formSubmit}
+                  <button type="submit" disabled={submitting} className={`btn-gold-solid relative z-20 pointer-events-auto whitespace-nowrap px-10 ${submitting ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                    {submitting ? (lang === 'FR' ? 'Envoi...' : 'Sending...') : tc.formSubmit}
                   </button>
                 </div>
               </form>

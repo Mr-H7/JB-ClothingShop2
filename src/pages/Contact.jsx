@@ -2,6 +2,8 @@ import { useState } from 'react'
 import GoldDivider from '../components/GoldDivider'
 import { useLang } from '../contexts/LangContext'
 import { api } from '../lib/api'
+import { WHATSAPP_NUMBER } from '../lib/whatsapp'
+import { BUSINESS, STORE_HOURS } from '../data/business'
 
 export default function Contact() {
   const { lang, t }          = useLang()
@@ -11,6 +13,7 @@ export default function Contact() {
   const [submitting,     setSubmitting]     = useState(false)
   const [submitError,    setSubmitError]    = useState('')
   const [newsletterDone, setNewsletterDone] = useState(false)
+  const [newsletterError, setNewsletterError] = useState('')
   const [nlSubmitting,   setNlSubmitting]   = useState(false)
   const [nlEmail,        setNlEmail]        = useState('')
   const [openFaq,        setOpenFaq]        = useState(null)
@@ -25,23 +28,24 @@ export default function Contact() {
       await api.post('/contact', { email: form.email, phone: form.phone, message: form.message })
       setSubmitted(true)
       setForm({ email: '', phone: '', message: '' })
-    } catch (err) {
-      setSubmitError(err?.data?.error || (lang === 'FR' ? 'Échec de l\'envoi.' : 'Send failed.'))
+    } catch {
+      setSubmitError(lang === 'FR' ? 'Impossible d\'envoyer le message pour le moment.' : 'Unable to send your message right now.')
     } finally {
       setSubmitting(false)
     }
   }
+
   const handleNewsletter = async e => {
     e.preventDefault()
     if (!nlEmail) return
+    setNewsletterError('')
     setNlSubmitting(true)
     try {
       await api.post('/newsletter', { email: nlEmail, language: lang })
       setNewsletterDone(true)
       setNlEmail('')
     } catch {
-      setNewsletterDone(true)
-      setNlEmail('')
+      setNewsletterError(lang === 'FR' ? 'Inscription temporairement indisponible.' : 'Subscription is temporarily unavailable.')
     } finally {
       setNlSubmitting(false)
     }
@@ -51,7 +55,7 @@ export default function Contact() {
     {
       id: 'address',
       label: tc.visitLabel,
-      value: '14 Savile Row, Mayfair\nLondon, W1S 3JN',
+      value: BUSINESS.addressLines.join('\n'),
       sub:   tc.visitSub,
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
@@ -63,7 +67,7 @@ export default function Contact() {
     {
       id: 'phone',
       label: tc.callLabel,
-      value: '+44 (0) 20 7946 0958',
+      value: BUSINESS.phone,
       sub:   tc.callSub,
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
@@ -74,7 +78,7 @@ export default function Contact() {
     {
       id: 'email',
       label: tc.emailLabel,
-      value: 'hello@jbclothing.co.uk',
+      value: BUSINESS.email,
       sub:   tc.emailSub,
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
@@ -93,7 +97,7 @@ export default function Contact() {
       ════════════════════════════════════════════════════════ */}
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
             background: `
               radial-gradient(ellipse 60% 50% at 50% 30%, rgba(201,168,76,0.06) 0%, transparent 60%),
@@ -101,8 +105,8 @@ export default function Contact() {
             `,
           }}
         />
-        <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-gold/20 to-transparent" />
-        <div className="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-gold/20 to-transparent" />
+        <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-gold/20 to-transparent pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-gold/20 to-transparent pointer-events-none" />
 
         <div className="container-luxury relative z-10 text-center">
           <div className="animate-fade-up">
@@ -166,21 +170,26 @@ export default function Contact() {
                 {tc.nlDone}
               </div>
             ) : (
-              <form
-                className="flex gap-0 flex-1 max-w-md"
-                onSubmit={handleNewsletter}
-              >
-                <input
-                  type="email" required
-                  value={nlEmail}
-                  onChange={e => setNlEmail(e.target.value)}
-                  placeholder={lang === 'FR' ? 'Votre adresse email' : 'Your email address'}
-                  className="input-luxury rounded-none rounded-l-full flex-1 border-r-0 text-sm"
-                />
-                <button type="submit" disabled={nlSubmitting} className={`btn-gold-solid rounded-none rounded-r-full px-7 text-[0.6rem] whitespace-nowrap ${nlSubmitting ? 'opacity-60 cursor-not-allowed' : ''}`}>
-                  {tc.nlCta}
-                </button>
-              </form>
+              <div className="flex-1 max-w-md w-full">
+                <form
+                  className="flex flex-col sm:flex-row gap-2 sm:gap-0"
+                  onSubmit={handleNewsletter}
+                >
+                  <input
+                    type="email" required
+                    value={nlEmail}
+                    onChange={e => setNlEmail(e.target.value)}
+                    placeholder={lang === 'FR' ? 'Votre adresse email' : 'Your email address'}
+                    className="input-luxury rounded-full sm:rounded-none sm:rounded-l-full flex-1 sm:border-r-0 text-sm"
+                  />
+                  <button type="submit" disabled={nlSubmitting} className={`btn-gold-solid rounded-full sm:rounded-none sm:rounded-r-full px-7 text-[0.6rem] whitespace-nowrap ${nlSubmitting ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                    {nlSubmitting ? (lang === 'FR' ? 'Envoi...' : 'Sending...') : tc.nlCta}
+                  </button>
+                </form>
+                {newsletterError && (
+                  <p className="text-red-400 text-xs tracking-wide mt-2">{newsletterError}</p>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -200,7 +209,7 @@ export default function Contact() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
             {/* ── Contact Form ── */}
-            <div>
+            <div className="relative z-10">
               {submitted ? (
                 <div className="luxury-card p-14 text-center border-gold/25 h-full flex flex-col items-center justify-center">
                   <div className="w-14 h-14 rounded-full border border-gold/40 flex items-center justify-center mx-auto mb-5 bg-gold/10">
@@ -216,13 +225,13 @@ export default function Contact() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="luxury-card p-8 md:p-10 space-y-5 h-full">
+                <form onSubmit={handleSubmit} className="luxury-card form-interaction-layer p-8 md:p-10 space-y-5 h-full">
                   <div>
                     <label className="label-gold block mb-2">{tc.formEmail} <span className="text-gold/50">*</span></label>
                     <input
                       type="email" name="email" required
                       value={form.email} onChange={handleChange}
-                      className="input-luxury"
+                      className="input-luxury relative z-20 pointer-events-auto"
                       placeholder={lang === 'FR' ? 'votre@email.com' : 'your@email.com'}
                     />
                   </div>
@@ -231,8 +240,8 @@ export default function Contact() {
                     <input
                       type="tel" name="phone"
                       value={form.phone} onChange={handleChange}
-                      className="input-luxury"
-                      placeholder="+44 7700 000000"
+                      className="input-luxury relative z-20 pointer-events-auto"
+                      placeholder={BUSINESS.phone}
                     />
                   </div>
                   <div>
@@ -240,7 +249,7 @@ export default function Contact() {
                     <textarea
                       name="message" required rows={6}
                       value={form.message} onChange={handleChange}
-                      className="input-luxury resize-none"
+                      className="input-luxury resize-none relative z-20 pointer-events-auto"
                       placeholder={lang === 'FR' ? 'Comment pouvons-nous vous aider ?' : 'How can we assist you today?'}
                     />
                   </div>
@@ -252,8 +261,8 @@ export default function Contact() {
                     <p className="text-[#3a3a3a] text-xs font-light">
                       {lang === 'FR' ? 'Réponse sous 24 heures.' : 'We reply within 24 hours.'}
                     </p>
-                    <button type="submit" disabled={submitting} className={`btn-gold-solid px-8 ${submitting ? 'opacity-60 cursor-not-allowed' : ''}`}>
-                      {submitting ? (lang === 'FR' ? 'Envoi…' : 'Sending…') : tc.formSubmit}
+                    <button type="submit" disabled={submitting} className={`btn-gold-solid relative z-20 pointer-events-auto px-8 ${submitting ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                      {submitting ? (lang === 'FR' ? 'Envoi...' : 'Sending...') : tc.formSubmit}
                     </button>
                   </div>
                 </form>
@@ -274,13 +283,13 @@ export default function Contact() {
                     </div>
                     <div>
                       <p className="label-gold text-[0.52rem]">
-                        {lang === 'FR' ? 'Notre Boutique' : 'Our Flagship'}
+                        {lang === 'FR' ? 'Notre Boutique' : 'Our Boutique'}
                       </p>
-                      <p className="text-white text-xs font-light">14 Savile Row, Mayfair, London</p>
+                      <p className="text-white text-xs font-light">{BUSINESS.addressOneLine}</p>
                     </div>
                   </div>
                   <a
-                    href="https://maps.google.com/?q=Savile+Row+Mayfair+London"
+                    href={BUSINESS.mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#4a4a4a] hover:text-gold transition-colors text-[0.58rem] tracking-widest uppercase"
@@ -298,8 +307,8 @@ export default function Contact() {
                     }}
                   />
                   <iframe
-                    title="JB Clothing — 14 Savile Row, Mayfair, London"
-                    src="https://www.openstreetmap.org/export/embed.html?bbox=-0.1435%2C51.5080%2C-0.1395%2C51.5110&layer=mapnik&marker=51.5095%2C-0.1415"
+                    title="JB Clothing — Temara, Morocco"
+                    src="https://maps.google.com/maps?q=W39G%2B59V%2C%20Temara%2C%20Morocco&t=&z=16&ie=UTF8&iwloc=&output=embed"
                     style={{
                       width: '100%',
                       height: '100%',
@@ -316,10 +325,10 @@ export default function Contact() {
               <div className="luxury-card p-6">
                 <p className="label-gold mb-4">{tc.storeHoursBadge}</p>
                 <div className="space-y-2">
-                  {tc.hoursRows.map(({ days, hours }) => (
-                    <div key={days} className="flex items-center justify-between">
-                      <span className="text-[#5a5a5a] text-xs font-light">{days}</span>
-                      <span className="text-gold text-xs font-semibold tracking-wider">{hours}</span>
+                  {STORE_HOURS[lang].map(({ day, hours }) => (
+                    <div key={day} className="flex items-start justify-between gap-4">
+                      <span className="text-[#5a5a5a] text-xs font-light">{day}</span>
+                      <span className="max-w-[180px] text-right text-gold text-xs font-semibold tracking-wider sm:max-w-none">{hours}</span>
                     </div>
                   ))}
                 </div>
@@ -379,14 +388,14 @@ export default function Contact() {
           FLOATING WHATSAPP
       ════════════════════════════════════════════════════════ */}
       <a
-        href="https://wa.me/447700900958"
+        href={`https://wa.me/${WHATSAPP_NUMBER}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-8 right-8 z-50 group animate-float"
+        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 group animate-float"
         aria-label={tc.whatsappTip}
       >
         {/* Tooltip */}
-        <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-[#111111] border border-[#2a2a2a] text-white text-xs px-4 py-2 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+        <span className="hidden sm:block absolute right-16 top-1/2 -translate-y-1/2 bg-[#111111] border border-[#2a2a2a] text-white text-xs px-4 py-2 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
           {tc.whatsappTip}
           <span className="absolute right-0 translate-x-1/2 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#111111] border-r border-b border-[#2a2a2a] rotate-45" />
         </span>

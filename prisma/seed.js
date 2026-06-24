@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -202,25 +201,9 @@ async function main() {
         originFR: p.originFR, originEN: p.originEN,
         careFR: p.careFR, careEN: p.careEN,
         tagFR: p.tagFR || '', tagEN: p.tagEN || '',
-        inventory: { create: { stock: 999 } },
       },
     })
   }
-
-  console.log('Seeding admin user...')
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@jbclothing.co.uk'
-  const adminPassword = process.env.ADMIN_PASSWORD || 'Admin1234!'
-  const adminHash = await bcrypt.hash(adminPassword, 12)
-  await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: { role: 'ADMIN' },
-    create: {
-      email: adminEmail,
-      passwordHash: adminHash,
-      role: 'ADMIN',
-      profile: { create: { firstName: 'Admin', lastName: 'JB' } },
-    },
-  })
 
   console.log('Seed complete.')
 }

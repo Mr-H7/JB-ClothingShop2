@@ -1,120 +1,47 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import GoldDivider from '../components/GoldDivider'
 import { useCart } from '../contexts/CartContext'
 import { useLang } from '../contexts/LangContext'
-import { api } from '../lib/api'
+import { openWhatsapp, buildCartMessage } from '../lib/whatsapp'
 
-export default function Checkout() {
-  const [step, setStep] = useState(1)
-  const { lang }        = useLang()
-  const navigate        = useNavigate()
-
-  const items    = useCart(s => s.items)
-  const clear    = useCart(s => s.clear)
-  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
-  const shipping = 0
-  const total    = subtotal + shipping
-
-  const [form, setForm] = useState({
-    firstName: '', lastName: '', email: '',
-    line1: '', city: '', postcode: '', phone: '',
-  })
-  const [error, setError] = useState('')
-  const [busy,  setBusy]  = useState(false)
-  const [confirmed, setConfirmed] = useState(null)
-
-  const onChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
-
-  const onDeliverySubmit = e => {
-    e.preventDefault()
-    if (!form.firstName || !form.email || !form.line1 || !form.city || !form.postcode) {
-      setError(lang === 'FR' ? 'Veuillez remplir tous les champs obligatoires.' : 'Please fill all required fields.')
-      return
-    }
-    setError('')
-    setStep(2)
-  }
-
-  const onPayAndConfirm = async () => {
-    if (items.length === 0) {
-      setError(lang === 'FR' ? 'Votre panier est vide.' : 'Your cart is empty.')
-      return
-    }
-    setError('')
-    setBusy(true)
-    try {
-      const res = await api.post('/orders', {
-        lang,
-        shippingAddress: {
-          firstName: form.firstName,
-          lastName:  form.lastName,
-          email:     form.email,
-          line1:     form.line1,
-          city:      form.city,
-          postcode:  form.postcode,
-          phone:     form.phone,
-          country:   'GB',
-        },
-        cartItems: items.map(it => ({
-          productSlug: it.productId,
-          quantity:    it.quantity,
-          variant:     it.variant,
-        })),
-      })
-      clear()
-      setConfirmed(res)
-      setStep(3)
-    } catch (err) {
-      setError(err.message || 'Order failed')
-    } finally {
-      setBusy(false)
-    }
-  }
+export default function Cart() {
+  const { lang }   = useLang()
+  const items      = useCart(s => s.items)
+  const updateQty  = useCart(s => s.updateQty)
+  const remove     = useCart(s => s.remove)
+  const subtotal   = items.reduce((s, i) => s + i.price * i.quantity, 0)
 
   const L = lang === 'FR' ? {
-    badge: 'Paiement', h1: 'Finaliser votre Commande',
-    stepLabels: ['Livraison', 'Paiement', 'Confirmation'],
-    deliveryTitle: 'Informations de Livraison',
-    firstName: 'Prénom', lastName: 'Nom', email: 'Email',
-    address: 'Adresse', city: 'Ville', postcode: 'Code Postal', phone: 'Téléphone',
-    continuePay: 'Continuer vers le paiement',
-    paymentTitle: 'Méthode de Paiement',
-    codLabel: 'Paiement à la livraison (COD)',
-    codDesc: 'Vous paierez en espèces ou par carte à la réception de votre colis.',
-    back: '← Retour',
-    confirmPay: 'Confirmer la Commande',
-    summary: 'Récapitulatif', subtotal: 'Sous-total', shipping: 'Livraison',
-    complimentary: 'Offerte', total: 'Total',
-    emptyCart: 'Votre panier est vide.',
+    badge: 'Votre Panier', h1: 'Panier',
+    empty: 'Votre panier est vide.',
     backToShop: 'Retour à la boutique',
-    confirmedH: 'Commande confirmée',
-    confirmedP: 'Merci pour votre commande. Vous recevrez une confirmation par email.',
-    orderRef: 'Référence',
-    viewAccount: 'Voir mes commandes',
+    subtotal: 'Sous-total',
+    total: 'Total',
+    sendViaWa: 'Envoyer la Commande via WhatsApp',
+    remove: 'Retirer',
+    qty: 'Quantité',
+    note: 'La finalisation se fait par WhatsApp avec notre équipe.',
   } : {
-    badge: 'Checkout', h1: 'Complete Your Order',
-    stepLabels: ['Delivery', 'Payment', 'Confirm'],
-    deliveryTitle: 'Delivery Information',
-    firstName: 'First Name', lastName: 'Last Name', email: 'Email Address',
-    address: 'Delivery Address', city: 'City', postcode: 'Postcode', phone: 'Phone',
-    continuePay: 'Continue to Payment',
-    paymentTitle: 'Payment Method',
-    codLabel: 'Cash on Delivery (COD)',
-    codDesc: 'Pay with cash or card upon delivery of your parcel.',
-    back: '← Back',
-    confirmPay: 'Confirm Order',
-    summary: 'Order Summary', subtotal: 'Subtotal', shipping: 'Shipping',
-    complimentary: 'Complimentary', total: 'Total',
-    emptyCart: 'Your cart is empty.',
+    badge: 'Your Cart', h1: 'Cart',
+    empty: 'Your cart is empty.',
     backToShop: 'Back to the boutique',
-    confirmedH: 'Order Confirmed',
-    confirmedP: 'Thank you for your order. You will receive an email confirmation shortly.',
-    orderRef: 'Reference',
-    viewAccount: 'View my orders',
+    subtotal: 'Subtotal',
+    total: 'Total',
+    sendViaWa: 'Send Order via WhatsApp',
+    remove: 'Remove',
+    qty: 'Quantity',
+    note: 'Orders are finalised on WhatsApp with our team.',
   }
 
-  const money = pence => `£${(pence / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+  const money = pence => {
+    const v = (pence / 100).toLocaleString(lang === 'FR' ? 'fr-FR' : 'en-GB', { maximumFractionDigits: 2 })
+    return lang === 'FR' ? `${v} £` : `£${v}`
+  }
+
+  const handleSend = () => {
+    if (!items.length) return
+    openWhatsapp(buildCartMessage(items, lang))
+  }
 
   return (
     <div className="bg-[#0a0a0a] min-h-screen pt-28">
@@ -126,168 +53,85 @@ export default function Checkout() {
           <GoldDivider variant="ornament" />
         </div>
 
-        {/* Steps */}
-        <div className="flex items-center justify-center gap-0 mb-12">
-          {L.stepLabels.map((label, i) => (
-            <div key={label} className="flex items-center">
-              <div className="flex flex-col items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                  step > i + 1 ? 'bg-gold text-black'
-                  : step === i + 1 ? 'bg-gold text-black'
-                  : 'border border-[#2a2a2a] text-[#3a3a3a]'
-                }`}>
-                  {step > i + 1 ? '✓' : i + 1}
-                </div>
-                <span className={`text-[0.6rem] tracking-widest uppercase mt-1.5 ${step === i + 1 ? 'text-gold' : 'text-[#3a3a3a]'}`}>
-                  {label}
-                </span>
-              </div>
-              {i < 2 && <div className={`w-16 sm:w-24 h-px mx-3 mb-5 ${step > i + 1 ? 'bg-gold' : 'bg-[#2a2a2a]'}`} />}
-            </div>
-          ))}
-        </div>
-
-        {items.length === 0 && step !== 3 ? (
+        {items.length === 0 ? (
           <div className="luxury-card p-14 text-center max-w-lg mx-auto">
-            <p className="label-gold mb-4">{L.emptyCart}</p>
+            <p className="label-gold mb-4">{L.empty}</p>
             <Link to="/shop" className="btn-gold-solid inline-block mt-4">{L.backToShop}</Link>
-          </div>
-        ) : step === 3 ? (
-          <div className="luxury-card p-14 text-center max-w-xl mx-auto border-gold/30">
-            <div className="w-16 h-16 rounded-full border border-gold/40 flex items-center justify-center mx-auto mb-6 bg-gold/10">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-            <h2 className="font-serif text-2xl text-white mb-3">{L.confirmedH}</h2>
-            <p className="text-[#5a5a5a] font-light text-sm max-w-sm mx-auto leading-relaxed mb-4">{L.confirmedP}</p>
-            {confirmed?.orderId && (
-              <p className="label-gold text-[0.6rem]">{L.orderRef}: <span className="text-gold">{confirmed.orderId.slice(-10).toUpperCase()}</span></p>
-            )}
-            <GoldDivider variant="ornament" className="max-w-xs mx-auto mt-6" />
-            <div className="flex gap-3 justify-center flex-wrap mt-6">
-              <button onClick={() => navigate('/account')} className="btn-gold-solid px-6">{L.viewAccount}</button>
-              <button onClick={() => navigate('/shop')} className="btn-gold px-6"><span>{L.backToShop}</span></button>
-            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-            {/* ── Form ── */}
-            <div className="lg:col-span-2">
-              {step === 1 && (
-                <form className="space-y-5" onSubmit={onDeliverySubmit}>
-                  <div className="luxury-card p-8">
-                    <h2 className="font-serif text-xl text-white mb-6">{L.deliveryTitle}</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="label-gold block mb-2">{L.firstName}</label>
-                        <input name="firstName" value={form.firstName} onChange={onChange} type="text" className="input-luxury" placeholder="James" />
-                      </div>
-                      <div>
-                        <label className="label-gold block mb-2">{L.lastName}</label>
-                        <input name="lastName" value={form.lastName} onChange={onChange} type="text" className="input-luxury" placeholder="Beaumont" />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="label-gold block mb-2">{L.email}</label>
-                        <input name="email" value={form.email} onChange={onChange} type="email" className="input-luxury" placeholder="james@example.com" />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="label-gold block mb-2">{L.address}</label>
-                        <input name="line1" value={form.line1} onChange={onChange} type="text" className="input-luxury" placeholder="10 Mayfair Street" />
-                      </div>
-                      <div>
-                        <label className="label-gold block mb-2">{L.city}</label>
-                        <input name="city" value={form.city} onChange={onChange} type="text" className="input-luxury" placeholder="London" />
-                      </div>
-                      <div>
-                        <label className="label-gold block mb-2">{L.postcode}</label>
-                        <input name="postcode" value={form.postcode} onChange={onChange} type="text" className="input-luxury" placeholder="W1K 1AA" />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="label-gold block mb-2">{L.phone}</label>
-                        <input name="phone" value={form.phone} onChange={onChange} type="tel" className="input-luxury" placeholder="+44 7700 000000" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {error && (
-                    <div className="border border-red-400/30 bg-red-400/5 px-4 py-3 text-red-400 text-xs">
-                      {error}
-                    </div>
-                  )}
-
-                  <button type="submit" className="btn-gold-solid w-full py-4">
-                    {L.continuePay}
-                  </button>
-                </form>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-5">
-                  <div className="luxury-card p-8">
-                    <h2 className="font-serif text-xl text-white mb-6">{L.paymentTitle}</h2>
-                    <div className="border border-gold/30 bg-[#161408] px-5 py-5 rounded-sm">
-                      <p className="label-gold mb-2">{L.codLabel}</p>
-                      <p className="text-[#6a6a6a] text-sm font-light leading-relaxed">{L.codDesc}</p>
-                    </div>
-                  </div>
-
-                  {error && (
-                    <div className="border border-red-400/30 bg-red-400/5 px-4 py-3 text-red-400 text-xs">
-                      {error}
-                    </div>
-                  )}
-
-                  <div className="flex gap-3">
-                    <button onClick={() => setStep(1)} className="btn-gold flex-1 py-4"><span>{L.back}</span></button>
-                    <button onClick={onPayAndConfirm} disabled={busy} className="btn-gold-solid flex-[2] py-4 disabled:opacity-50">
-                      {busy ? '…' : L.confirmPay}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ── Order Summary ── */}
-            <div className="luxury-card p-6 self-start sticky top-28">
-              <h2 className="font-serif text-lg text-white mb-5">{L.summary}</h2>
-              <div className="space-y-4 mb-5">
-                {items.map(item => (
-                  <div key={item.key} className="flex gap-4">
-                    <div
-                      className="w-16 h-20 flex-shrink-0 border border-[#2a2a2a] bg-cover bg-center"
-                      style={{ backgroundImage: item.imgUrl ? `url(${item.imgUrl})` : 'linear-gradient(145deg, #1a1a1a, #2a2a2a)' }}
-                    />
-                    <div className="flex-1">
-                      <p className="font-serif text-sm text-white leading-tight">
+            {/* ── Items ── */}
+            <div className="lg:col-span-2 space-y-4">
+              {items.map(item => (
+                <div key={item.key} className="luxury-card p-5 flex gap-5">
+                  <div
+                    className="w-24 h-28 flex-shrink-0 border border-[#2a2a2a] bg-cover bg-center"
+                    style={{ backgroundImage: item.imgUrl ? `url(${item.imgUrl})` : 'linear-gradient(145deg, #1a1a1a, #2a2a2a)' }}
+                  />
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <p className="font-serif text-base text-white leading-tight">
                         {lang === 'FR' ? item.nameFR : item.nameEN}
                       </p>
                       {item.variant && (
                         <p className="text-[#4a4a4a] text-[0.6rem] tracking-widest uppercase mt-1">{item.variant}</p>
                       )}
-                      <p className="text-[#4a4a4a] text-[0.6rem] tracking-widest uppercase mt-1">× {item.quantity}</p>
-                      <p className="text-gold text-sm font-semibold mt-1">{money(item.price * item.quantity)}</p>
+                      <p className="text-gold text-sm font-semibold mt-2">{money(item.price)}</p>
+                    </div>
+                    <div className="flex items-center justify-between mt-3 gap-3 flex-wrap">
+                      <div className="flex items-center border border-[#2a2a2a] w-fit">
+                        <button
+                          onClick={() => updateQty(item.key, item.quantity - 1)}
+                          className="w-9 h-9 flex items-center justify-center text-[#5a5a5a] hover:text-gold border-r border-[#2a2a2a] text-lg"
+                          aria-label="-"
+                        >−</button>
+                        <span className="w-10 text-center text-white text-sm font-semibold">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQty(item.key, item.quantity + 1)}
+                          className="w-9 h-9 flex items-center justify-center text-[#5a5a5a] hover:text-gold border-l border-[#2a2a2a] text-lg"
+                          aria-label="+"
+                        >+</button>
+                      </div>
+                      <button
+                        onClick={() => remove(item.key)}
+                        className="text-[#4a4a4a] hover:text-red-400 text-[0.6rem] tracking-widest uppercase transition-colors"
+                      >
+                        {L.remove}
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
-              <GoldDivider />
-              <div className="space-y-2 mt-4 text-sm">
+                </div>
+              ))}
+            </div>
+
+            {/* ── Summary ── */}
+            <div className="luxury-card p-6 self-start sticky top-28">
+              <h2 className="font-serif text-lg text-white mb-5">{L.total}</h2>
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-[#5a5a5a]">
                   <span>{L.subtotal}</span>
                   <span>{money(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-[#5a5a5a]">
-                  <span>{L.shipping}</span>
-                  <span className="text-gold">{L.complimentary}</span>
-                </div>
               </div>
               <GoldDivider className="my-4" />
-              <div className="flex justify-between text-white font-semibold">
+              <div className="flex justify-between text-white font-semibold mb-6">
                 <span className="font-serif text-base">{L.total}</span>
-                <span className="text-gold text-lg">{money(total)}</span>
+                <span className="text-gold text-lg">{money(subtotal)}</span>
               </div>
+
+              <button
+                onClick={handleSend}
+                className="btn-gold-solid w-full py-4 flex items-center justify-center gap-3"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 21.785h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/>
+                </svg>
+                {L.sendViaWa}
+              </button>
+              <p className="text-[#3a3a3a] text-[0.6rem] tracking-wide mt-4 text-center">
+                {L.note}
+              </p>
             </div>
           </div>
         )}

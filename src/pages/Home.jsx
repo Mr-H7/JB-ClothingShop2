@@ -1,46 +1,14 @@
 import { Link } from 'react-router-dom'
 import GoldDivider from '../components/GoldDivider'
 import { useLang } from '../contexts/LangContext'
+import ProductVisual from '../components/ProductVisual'
+import { BUSINESS } from '../data/business'
+import { products, formatProductPrice } from '../data/catalog'
+import { CAT_FR } from '../i18n/index.js'
 
-/* ── Featured products (IDs reference Shop data) ─────────────────── */
-const featured = [
-  {
-    id: 1,
-    nameFR: 'Sac Noir Éclat',
-    nameEN: 'Black Éclat Bag',
-    price:  '£495',
-    tag:    { FR: 'Nouveau', EN: 'New' },
-    cat:    { FR: 'Les Sacs', EN: 'Bags' },
-    img:    'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 3,
-    nameFR: 'Montre Or Rose Impérial',
-    nameEN: 'Imperial Rose Gold Watch',
-    price:  '£890',
-    tag:    { FR: 'Exclusif', EN: 'Exclusive' },
-    cat:    { FR: 'Montres', EN: 'Watches' },
-    img:    'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 5,
-    nameFR: 'Lunettes Aviateur Dorées',
-    nameEN: 'Gold Aviator Sunglasses',
-    price:  '£180',
-    tag:    { FR: 'Nouveau', EN: 'New' },
-    cat:    { FR: 'Lunettes', EN: 'Sunglasses' },
-    img:    'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 9,
-    nameFR: 'Essence Noire EDP',
-    nameEN: 'Essence Noire EDP',
-    price:  '£145',
-    tag:    { FR: 'Exclusif', EN: 'Exclusive' },
-    cat:    { FR: 'Parfum femme', EN: "Women's Perfume" },
-    img:    'https://images.unsplash.com/photo-1541643600914-78b084683702?auto=format&fit=crop&w=600&q=80',
-  },
-]
+const featured = ['sacs', 'montres', 'lunettes', 'parfums']
+  .map(catKey => products.find(product => product.catKey === catKey))
+  .filter(Boolean)
 
 export default function Home() {
   const { lang, t } = useLang()
@@ -60,9 +28,9 @@ export default function Home() {
         {/* Background image */}
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1547949003-9792a18a2601?auto=format&fit=crop&w=1920&q=80"
+            src={BUSINESS.heroImage}
             alt=""
-            className="w-full h-full object-cover opacity-18"
+            className="w-full h-full object-cover object-center opacity-35"
             onError={e => { e.currentTarget.style.display = 'none' }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/80 via-[#0a0a0a]/60 to-[#0a0a0a]" />
@@ -144,11 +112,11 @@ export default function Home() {
               >
                 {/* Image */}
                 <div className="relative overflow-hidden bg-[#161616]" style={{ aspectRatio: '3/4' }}>
-                  <img
-                    src={product.img}
+                  <ProductVisual
+                    product={product}
                     alt={lang === 'FR' ? product.nameFR : product.nameEN}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    onError={e => { e.currentTarget.style.display = 'none' }}
+                    className="absolute inset-0 transition-transform duration-700 group-hover:scale-105"
+                    imageClassName="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-[rgba(201,168,76,0.07)] to-transparent" />
                   {/* Tag */}
@@ -166,11 +134,11 @@ export default function Home() {
                 </div>
                 {/* Info */}
                 <div className="p-5">
-                  <p className="text-[#3a3a3a] text-[0.55rem] tracking-widest uppercase mb-1">{product.cat[lang]}</p>
+                  <p className="text-[#3a3a3a] text-[0.55rem] tracking-widest uppercase mb-1">{t.categories[CAT_FR.indexOf(product.cat)] || product.cat}</p>
                   <h3 className="font-serif text-base text-white group-hover:text-gold transition-colors duration-300 mb-2">
                     {lang === 'FR' ? product.nameFR : product.nameEN}
                   </h3>
-                  <p className="text-gold font-semibold text-sm">{product.price}</p>
+                  <p className="text-gold font-semibold text-sm">{formatProductPrice(product, lang)}</p>
                 </div>
               </Link>
             ))}
@@ -258,66 +226,6 @@ export default function Home() {
                   <h3 className="font-serif text-lg text-white">{ed.story3.title}</h3>
                 </div>
               </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════
-          OUR STORY (anchor target for footer link)
-      ════════════════════════════════════════════════════ */}
-      <section id="story" className="section-luxury border-t border-[#1a1a1a]">
-        <div className="container-luxury">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Text */}
-            <div>
-              <p className="label-gold mb-4">{lang === 'FR' ? 'Notre Histoire' : 'Our Story'}</p>
-              <h2 className="heading-luxury text-4xl md:text-5xl text-white mb-6">
-                {lang === 'FR' ? 'L\'Excellence au Cœur de Chaque Pièce' : 'Excellence at the Heart of Every Piece'}
-              </h2>
-              <GoldDivider variant="left" />
-              <p className="text-[#5a5a5a] text-sm font-light leading-relaxed mt-4 mb-4">
-                {lang === 'FR'
-                  ? "Fondée sur une passion pour les accessoires d'exception, JB Clothing sélectionne des pièces qui transcendent les saisons. Chaque sac, montre, châle ou flacon de parfum est choisi pour son excellence artisanale et son élégance intemporelle."
-                  : "Founded on a passion for exceptional accessories, JB Clothing curates pieces that transcend seasons. Every bag, watch, shawl, or perfume bottle is chosen for its artisanal excellence and timeless elegance."}
-              </p>
-              <p className="text-[#5a5a5a] text-sm font-light leading-relaxed mb-8">
-                {lang === 'FR'
-                  ? "Depuis plus de 12 ans, nous guidons une clientèle exigeante vers des accessoires qui enrichissent leur quotidien et affirment leur sens du style."
-                  : "For over 12 years, we have guided a discerning clientele toward accessories that enrich their everyday and affirm their sense of style."}
-              </p>
-              <Link to="/shop" className="btn-gold">
-                <span>{lang === 'FR' ? 'Découvrir la Boutique' : 'Discover the Boutique'}</span>
-              </Link>
-            </div>
-            {/* Visual */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="luxury-card overflow-hidden" style={{ aspectRatio: '2/3' }}>
-                <img
-                  src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=400&q=80"
-                  alt=""
-                  className="w-full h-full object-cover opacity-70"
-                  onError={e => { e.currentTarget.style.opacity = '0' }}
-                />
-              </div>
-              <div className="grid grid-rows-2 gap-4 mt-8">
-                <div className="luxury-card overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1541643600914-78b084683702?auto=format&fit=crop&w=400&q=80"
-                    alt=""
-                    className="w-full h-full object-cover opacity-70"
-                    onError={e => { e.currentTarget.style.opacity = '0' }}
-                  />
-                </div>
-                <div className="luxury-card overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80"
-                    alt=""
-                    className="w-full h-full object-cover opacity-70"
-                    onError={e => { e.currentTarget.style.opacity = '0' }}
-                  />
-                </div>
-              </div>
             </div>
           </div>
         </div>
